@@ -16,7 +16,7 @@
 
 	microgear.on('connected', function() {
 		microgear.setname('mygear');
-		microgear.chat("htmlgear","Now I am connected with netpie...");
+		document.getElementById("temp").innerHTML = "Now I am connected with netpie...";
 		setInterval(function() {
 			microgear.chat("htmlgear","Hello at "+Date.now());
 		},5000);
