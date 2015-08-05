@@ -2582,7 +2582,7 @@ _microgear.prototype.gettoken = function(callback) {
 		self.accesstoken = jsonparse(localStorage.getItem("microgear.accesstoken"));
 	}
 
-	if (self.accesstoken) {
+	if (self.accesstoken && self.accesstoken.token && self.accesstoken.secret && self.accesstoken.endpoint) {
 		if (typeof(callback)=='function') callback(3);
 	}
 	else {
@@ -2590,13 +2590,13 @@ _microgear.prototype.gettoken = function(callback) {
 		if (validateLocalStorage()) {
 			self.requesttoken = jsonparse(localStorage.getItem("microgear.requesttoken"));
 		}
-		if (self.requesttoken) {
+		if (self.requesttoken && self.requesttoken.token && self.requesttoken.secret) {
 
 			var request_data = {
 			    url: 'http://gearauth.netpie.io:8080/oauth/access_token',
 			    method: 'POST',
 			    data: {
-					oauth_callback: 'scope=&appid=piedemo&verifier=1234',
+					oauth_callback: 'scope=&appid='+self.appid+'&verifier=1234',
 					oauth_verifier: '1234'
 			    }
 			};
@@ -2648,7 +2648,7 @@ _microgear.prototype.gettoken = function(callback) {
 			    url: 'http://gearauth.netpie.io:8080/oauth/request_token',
 			    method: 'POST',
 			    data: {
-					oauth_callback: 'scope=&appid=piedemo&verifier=1234',
+					oauth_callback: 'scope=&appid='+self.appid+'&verifier=1234',
 			    }
 			};
 			var http = createCORSRequest(request_data.method, request_data.url);
@@ -2825,8 +2825,8 @@ _microgear.prototype.unsubscribe = function(topic,callback) {
 
 _microgear.prototype.publish = function(_topic,_msg) {
 	var message = new Paho.MQTT.Message(_msg);
-	message.destinationName = '/'+this.appid+_topic;
-	this.client.send(message);
+	message.destinationName = '/'+self.appid+_topic;
+	self.client.send(message);
 }
 
 _microgear.prototype.setname = function(gearname) {
