@@ -2,6 +2,11 @@
 
 microgear-html5 คือ client library ที่ทำหน้าที่เป็น client library ของ NETPIE ที่จะเปลี่ยน web browser ให้เป็น microgear เพื่อสื่อสารกับ microgear ใน platform อื่นๆ ไม่ว่าจะเป็น arduino, raspberry pi หรือ computer เพื่อการพัฒนา IOT application คุณสามารถนำ library นี้ไปพัฒนา IOT console หรือ mobile application ได้โดยการเขียนโปรแกรมเขียนโปรแกรมภาษา HTML/JavaScript ที่คุณคุ้นเคย รายละเอียดเกี่ยวกับ netpie platform สามารถศึกษาได้จาก http://netpie.io
 
+## การรองรับ
+- Chrome
+- Firefox
+- Opera
+
 ## การติดตั้ง
 
 ดาวน์โหลด microgear.js จาก ที่นี่
