@@ -15,16 +15,11 @@
  *******************************************************************************/
 
 /**
- * API Endpoint to get an OAuth Request Token 
+ * General API Endpoint
  * @type {String}
  */
-const GEARAUTHREQUESTTOKENENDPOINT = 'http://gearauth.netpie.io:8080/oauth/request_token';
-
-/**
- * API Endpoint to get an OAuth Access Token 
- * @type {String}
- */
-const GEARAUTHACCESSTOKENENDPOINT = 'http://gearauth.netpie.io:8080/oauth/access_token';
+const GEARAPIADDRESS = 'ga.netpie.io';
+const GEARAPIPORT = '8080';
 
 /**
  * Microgear API version
@@ -2593,7 +2588,7 @@ _microgear.prototype.gettoken = function(callback) {
 		if (self.requesttoken && self.requesttoken.token && self.requesttoken.secret) {
 
 			var request_data = {
-			    url: 'http://gearauth.netpie.io:8080/oauth/access_token',
+			    url: 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/oauth/access_token',
 			    method: 'POST',
 			    data: {
 					oauth_callback: 'scope=&appid='+self.appid+'&verifier=1234',
@@ -2618,9 +2613,15 @@ _microgear.prototype.gettoken = function(callback) {
 		    			case 200 : 
 					        	var r = extract(http.responseText);
 					        	self.accesstoken = {};
-					        	self.accesstoken.token = r.oauth_token;
+								self.accesstoken.token = r.oauth_token;
 					        	self.accesstoken.secret = r.oauth_token_secret;
 					        	self.accesstoken.endpoint = unescape(r.endpoint);
+
+		    					// generate revokecode
+								var hkey = self.accesstoken.secret+'&'+self.gearsecret;
+							    var revokecode = CryptoJS.HmacSHA1(self.accesstoken.token,hkey).toString(CryptoJS.enc.Base64).replace('/','_');
+
+					        	self.accesstoken.revokecode = unescape(revokecode);
 
 								if (validateLocalStorage()) {
 									localStorage.setItem("microgear.accesstoken", JSON.stringify(self.accesstoken));
@@ -2645,7 +2646,7 @@ _microgear.prototype.gettoken = function(callback) {
 		}
 		else {
 			var request_data = {
-			    url: 'http://gearauth.netpie.io:8080/oauth/request_token',
+			    url: 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/oauth/request_token',
 			    method: 'POST',
 			    data: {
 					oauth_callback: 'scope=&appid='+self.appid+'&verifier=1234',
@@ -2740,11 +2741,14 @@ function _onConnect() {
 		self.client.subscribe(self.subscriptions[i]);
 	}
 
+	/* subscribe for control messages */
+	self.client.subscribe('/&id/'+this.clientid+'/#');
+
 	if (_microgear.prototype.listeners('present')) {
-		self.client.subscribe('/'+self.appid+'/@present');
+		self.client.subscribe('/'+self.appid+'/&present');
 	}
 	if (_microgear.prototype.listeners('absent')) {
-		self.client.subscribe('/'+self.appid+'/@absent');
+		self.client.subscribe('/'+self.appid+'/&absent');
 	}
 
 	_microgear.prototype.emit('connected');
@@ -2756,7 +2760,7 @@ function _onMessageArrived(msg) {
 	var plen = self.appid.length +1;
 	var rtop = topic.substr(plen,topic.length-plen);
 
-	if (rtop.substr(0,2)=='/@') {
+	if (rtop.substr(0,2)=='/&') {
 		var p = (rtop.substr(1,rtop.length-1)+'/').indexOf('/');
 		var ctop = rtop.substr(2,p);
 		switch (ctop) {
@@ -2850,12 +2854,39 @@ _microgear.prototype.chat = function (gearname, message, callback) {
 	self.publish('/gearname/'+gearname, message, callback);
 }
 
-_microgear.prototype.resettoken = function () {
-	if (validateLocalStorage()) {
-		self.requesttoken = {};
-		self.accesstoken = {};
-		localStorage.setItem("microgear.accesstoken", JSON.stringify({}));
-		localStorage.setItem("microgear.requesttoken", JSON.stringify({}));
+_microgear.prototype.resettoken = function (callback) {
+	var atok = jsonparse(localStorage.getItem("microgear.accesstoken"));
+	if (atok && atok.token && atok.revokecode) {
+		var xmlHttp = new XMLHttpRequest();
+	    xmlHttp.onreadystatechange = function() { 
+			if(xmlHttp.readyState == 4) {
+		    		switch (xmlHttp.status) {
+		    			case 200 :
+								if (xmlHttp.responseText != 'FAILED') {
+	 								if (validateLocalStorage()) {
+										self.requesttoken = {};
+										self.accesstoken = {};
+										localStorage.setItem("microgear.accesstoken", JSON.stringify({}));
+										localStorage.setItem("microgear.requesttoken", JSON.stringify({}));
+									}
+								}
+								if (typeof(callback)=='function') callback();
+								break;
+						default :
+								_microgear.prototype.emit('error','Reset token error : '+xmlHttp.responseText);
+								if (typeof(callback)=='function') callback(xmlHttp.responseText);
+								break;
+					}
+		    }		
+		}
+
+        var apiurl = 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/api/revoke/'+atok.token+'/'+atok.revokecode;
+		xmlHttp.open("GET", apiurl, true); //true for asynchronous 
+    	xmlHttp.send(null);
+	}
+	else {
+		console.log(1111);
+		if (typeof(callback)=='function') callback();
 	}
 }
 
