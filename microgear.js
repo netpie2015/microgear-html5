@@ -2619,7 +2619,7 @@ _microgear.prototype.gettoken = function(callback) {
 
 		    					// generate revokecode
 								var hkey = self.accesstoken.secret+'&'+self.gearsecret;
-							    var revokecode = CryptoJS.HmacSHA1(self.accesstoken.token,hkey).toString(CryptoJS.enc.Base64).replace('/','_');
+							    var revokecode = CryptoJS.HmacSHA1(self.accesstoken.token,hkey).toString(CryptoJS.enc.Base64).replace(/\//g,'_');
 
 					        	self.accesstoken.revokecode = unescape(revokecode);
 
@@ -2880,7 +2880,8 @@ _microgear.prototype.resettoken = function (callback) {
 		    }		
 		}
 
-        var apiurl = 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/api/revoke/'+atok.token+'/'+atok.revokecode;
+		var revokecode = atok.revokecode.replace(/\//g,'_');
+        var apiurl = 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/api/revoke/'+atok.token+'/'+revokecode;
 		xmlHttp.open("GET", apiurl, true); //true for asynchronous 
     	xmlHttp.send(null);
 	}
