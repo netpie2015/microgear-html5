@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Microger Chat</title>
+    <script src="https://netpie.io/microgear.js"></script>
+	  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <style type="text/css">
+      body{
+        background-color: Silver ; 
+      }
+      .col_control {
+          background-color: white   ; 
+          height:100%;
+          position: fixed;
+          border-color: black;
+          border-width: 1%;
+          border-style: solid;
+          border-top: none;
+          border-bottom: none;
+          border-left: none;
+      }
+      .col_console {
+          position:absolute;
+          bottom:0;
+          right:0px;
+          left:0px;
+          max-height:100%;
+      }
+      .cycle_status {
+        border-radius: 50%;
+        width: 200px;
+          height: 200px;
+        border-color: white;
+        background-color:green;
+        border-width: 1%;
+        float: none;
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
+      }
+      .input-group-addon{
+        width: 40%;
+      }
+      .center_{
+        margin-left: auto;
+          margin-right: auto;
+          text-align: center;
+      }
+      .logo{
+        width: 90%;
+        padding: 3%;
+      }
+      .topic{
+        color: white;
+        margin-left: 2%;
+        width: auto;
+        padding: 0.9%;
+        border-width: 0.1%;
+        border-style: solid;
+      }
+      .msg {
+        margin-left: 1%;
+        background-color: white;
+        border-width: 0.1%;
+        border-style: solid;
+        border-color: white;
+        padding: 1%;
+      }
+      .floating-left-box {
+          float: left;
+      }
+      .floating-right-box {
+        margin-right: 2%;
+          float: right;
+      }
+      .clear-box{
+        clear: both;
+      }
+      .bottom{
+        position: absolute;
+          bottom: 0;
+      }
+      .present{
+        display: table;
+        color: LawnGreen ;
+        border-radius:50%;
+        border-width: 1%;
+        border-style: solid;
+        border-color: LawnGreen;
+        width:8vw; /* 20% of the viewport width */
+          height: 8vw;
+          left: auto;
+          margin:auto;
+          font-size: 2em;
+      }
+      .absent{
+        display: table;
+        color: Silver ;
+        border-radius:50%;
+        border-width: 1%;
+        border-style: solid;
+        border-color: Silver;
+        width:8vw; /* 20% of the viewport width */
+          height: 8vw;
+          left: auto;
+          margin:auto;
+          font-size: 2em;
+      }
+      .present span{
+        text-align: center;
+          display: table-cell;
+          vertical-align: middle;
+      }
+      .absent span{
+        text-align: center;
+          display: table-cell;
+          vertical-align: middle;
+      }
+      .delete_border_buttom{
+        border-bottom: none;
+      }
+      .delete_border_top{
+        border-top: none;
+      }
+      .delete_border_radius{
+        border-radius: 0%;
+      }
+      .add_padding{
+        padding: 2%
+      }
+      .scrollbar_member{
+        height: 220px; 
+        overflow-y:auto; 
+      }
+      .box_console{
+          margin:auto;
+        display: table;
+        height: 100vh;
+      }
+      .box_console span{
+        text-align: center;
+          display: table-cell;
+          vertical-align: middle;
+      }
+      .img_load{
+        width: 20%;
+      }
+      @media (max-width: 767px) {
+        .col_control{
+          display: none;
+        }
+        .bar_form{
+          display: inline;
+        }
+      }
+      @media (min-width:767px) {
+        .bar_form{
+          display: none;
+        }
+      }
+      .logo_bar{
+        height: 120%;
+      }
+      .padding_input{
+        padding-left: 3%;
+        padding-right: 3%
+      } 
+      .chat_button{
+
+      }
+      .chat_tool{
+        background-color: white;
+      }
+      .chat_box{
+        border-left: none;
+        border-right: none;
+        font-size: 18px;
+        padding-top: 5%;
+        padding-bottom: 5%;
+      }
+      .status_body{
+        height: 40vh;
+        overflow: auto;
+      }
+      .online{
+        color: green;
+      }
+      .offline{
+        color: gray;
+      }
+    </style>
+	  <script>
+      var member = [];
+      var autoscroll = true;
+      var name = "";
+      var microgear ;
+      function setInformation(){
+        before_connect();
+
+        const APPKEY = <APPKEY>;
+        const APPSECRET = <APPSECRET>;
+        const APPID = <APPID>;
+
+        name = document.getElementById('name').value;
+        microgear = Microgear.create({
+          gearkey: APPKEY,
+          gearsecret: APPSECRET
+        });
+        microgear.on('message',function(topic,msg) {
+          console.log(msg);
+          var msgi = msg.split("#");
+          if(msgi[0]=="I'm new" && msgi[1]!=name){
+            if(member.indexOf(msgi[1])<0){
+              member.push(msgi[1]);
+            document.getElementById("member_table").innerHTML += '<tr><td class="info" id="'+msgi[1]+'">'+msgi[1]+'<span class="glyphicon glyphicon glyphicon-heart pull-right online" aria-hidden="true" id="color'+msgi[1]+'"></span></td></tr>'
+            }
+            else{
+              var id = "#color"+msgi[1];
+              $(id).removeClass('offline');
+              $(id).addClass('online');
+            }
+          }
+          if(msgi[0]=="Hi" && msgi[1]!=name){
+            microgear.publish("/chat","Hey#"+name);
+          }
+          if(msgi[0]=="Hey" && msgi[1]!=name){
+            if(member.indexOf(msgi[1])<0){
+              member.push(msgi[1]);
+              document.getElementById("member_table").innerHTML += '<tr><td class="info" id="'+msgi[1]+'">'+msgi[1]+'<span class="glyphicon glyphicon glyphicon-heart pull-right online" aria-hidden="true" id="color'+msgi[1]+'"></span></td></tr>'
+            }
+          }
+          if(msgi[0]=="msg" && msgi[1]!=name){
+            document.getElementById("data").innerHTML += "<div class="+'"floating-left-box topic"'+"><strong>"+msgi[1]+"</strong></div>"+"<div class="+'"floating-left-box msg"'+">"+msgi[2]+"</div>"+"</div>"+"<div class="+'"clear-box"'+">"+"</div><br>";
+            auto_scroll();
+          }
+          if(msgi[0]=="bye" && msgi[1]!=name){
+            if(member.indexOf(msgi[1])>=0){
+              var id = "#color"+msgi[1];
+              $(id).removeClass('online');
+              $(id).addClass('offline');
+            }
+          }
+        });
+
+        microgear.on('connected', function() {
+          microgear.subscribe("/chat");
+          microgear.setname(name);
+          microgear.publish("/chat","I'm new#"+name);
+          microgear.publish("/chat","Hi#"+name);
+          after_connect();
+        });
+        microgear.on('present', function(event) {
+          console.log(event);
+        });
+        microgear.on('absent', function(event) {
+          console.log(event);
+        });
+        microgear.resettoken(function(){
+          microgear.connect(APPID);
+        });
+        
+      }
+  	</script>
+  </head>
+  <body onunload="disconnect()">
+    <div class="container-fluid" id="container_flow">
+      <nav class="navbar navbar-default navbar-fixed-top bar_form">
+        <div class="container">
+          <div class="navbar-header">
+            <button id="aria_expanded" type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar" aria-expanded="true" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#"><img src="http://i.imghub.co/qdxWO.png" class="logo_bar"></a>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse in" aria-expanded="true">
+            <form action="javascript:setInformation()" id="action_form">
+              <ul class="nav navbar-nav">
+                <br>
+                <li class="padding_input"><input type="text" class="form-control padding_input delete_border_radius" placeholder="Name" aria-describedby="name" required id="name"></li>
+              </ul>
+              <div id="button_control" class="row center_">
+                <button type="submit" class="btn btn-primary navbar-btn center_c btn" id="buttoncontrol">CONNECT</button>
+              </div>
+            </form>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    	<div class="row">
+    		<div class="col-sm-3 col_control" id="col_control">
+          <br>
+    			<div id="logo" class="row">
+    				<div class="center_"><img src="http://i.imghub.co/qdxWO.png" class="logo"></div>
+    			</div>
+    			<hr>
+          <br>
+          <form action="javascript:setInformation()" id="action_form1">
+            <div id="information" class="row center_">
+                <br>
+                <input type="text" class="form-control delete_border_radius" placeholder="Name" aria-describedby="name" required id="name1">
+            </div>
+            <br>
+            <div id="button_control" class="row center_">
+              <button type="submit" class="btn btn-primary navbar-btn center_c btn" id="buttoncontrol1">CONNECT</button>
+            </div>
+          </form>
+          <br>
+    			<div id="status" class="row center-block">
+            <div class="panel panel-primary">
+              <div class="panel-heading">
+                <h3 class="panel-title">Who's Online!</h3>
+              </div>
+              <div class="panel-body status_body">
+                <table class="table table-hover" id="member_table">
+                </table>
+              </div>
+            </div>
+    			</div>
+    			<br>
+    		</div>
+    		<div class="col-sm-9 col-sm-offset-3 col-xs-12  col_console">
+          <div class="box_console" id="box_console">
+            <span id="console_connect"><h1>Microgear Chat</h1></span>
+          </div>
+          <div id="msgbar" class="row">
+			      <div id="data"></div>
+            <div id="bottom" class="buttom"><a href="bottom"></a></div>
+          </div>
+          <div class="row chat_tool" id="chat">
+            <div class="input-group">
+              <input class="form-control chat_box col-" rows="1" id="msg" onkeypress="chat()"></input>
+              <span class="input-group-btn">
+                <button class="btn btn-default btn-lg chat_button" type="button" onClick="chat1()">SEND</button>
+              </span>
+            </div>
+          </div>
+    		</div>
+    	</div>
+    </div>
+  </body>
+  <script type="text/javascript">
+    function disconnect(){
+      microgear.publish("/chat","bye#"+name);
+    }
+    function chat(){
+      if (event.keyCode == 13) {
+        var msg = document.getElementById('msg').value;
+        if(msg!=""){
+          document.getElementById("data").innerHTML += "<div class="+'"floating-right-box msg"'+">"+msg+"</div>"+"</div>"+"<div class="+'"clear-box"'+">"+"</div><br>";
+          document.getElementById('msg').value = "";
+          microgear.publish("/chat","msg#"+name+"#"+msg);
+        }
+      }
+    }
+    function chat1(){
+      var msg = document.getElementById('msg').value;
+      if(msg!=""){
+        document.getElementById("data").innerHTML += "<div class="+'"floating-right-box msg"'+">"+msg+"</div>"+"</div>"+"<div class="+'"clear-box"'+">"+"</div><br>";
+        document.getElementById('msg').value = "";
+        microgear.publish("/chat","msg#"+name+"#"+msg);
+      }
+    }
+    $(function () {
+      var $win = $(window);
+      $win.scroll(function () {
+        if ($win.height() + $win.scrollTop()< $(document).height())
+          autoscroll = false;
+        else if ($win.height() + $win.scrollTop()== $(document).height()) {
+          autoscroll = true;
+        }
+      });
+    });
+    $('#name').keyup(function() {
+      document.getElementById('name1').value = $(this).val();
+    });
+    $('#name1').keyup(function() {
+      document.getElementById('name').value = $(this).val();
+    });
+    
+    function after_connect(){
+      $("#box_console").hide();
+      $("#buttoncontrol").removeClass('btn-primary');
+      $("#buttoncontrol").addClass('btn-danger');
+      document.getElementById('buttoncontrol').innerHTML = "DISCONNECT";
+      $('#action_form').attr('action', 'javascript:reset()');
+      $("#buttoncontrol1").removeClass('btn-primary');
+      $("#buttoncontrol1").addClass('btn-danger');
+      document.getElementById('buttoncontrol1').innerHTML = "DISCONNECT";
+      $('#action_form1').attr('action', 'javascript:reset()');
+      $("#name").prop('disabled', true);
+      $("#name1").prop('disabled', true);
+      $("#navbar").prop('aria-expanded', false);
+      $("#navbar").removeClass('in');
+    }
+    function before_connect(){
+      document.getElementById('console_connect').innerHTML = '<img src="http://i.imghub.co/qdxW5.gif" class="img_load">';
+    }
+    function reset(){
+      window.location.reload();
+    }
+    function auto_scroll(){
+      if(autoscroll){
+        document.getElementById('bottom').scrollIntoView();
+      }
+    }
+  </script>
+</html>
