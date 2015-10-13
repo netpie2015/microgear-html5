@@ -30,8 +30,9 @@
 		console.log(event);
 	});
 
-	microgear.resettoken();
-	microgear.connect(APPID);
+	microgear.resettoken(function(err) {
+		microgear.connect(APPID);
+	});
 </script>
 
 <div id="data">_____</div>
