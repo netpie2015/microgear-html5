@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Console</title>
+    <script src="https://netpie.io/microgear.js"></script>
+  </head>
+  <body>
+    <fieldset>
+      <label> Subscribe to: <input type="text" id="subscribe_to" value="/chat"/></label>
+      <label> Name: <input type="text" id="name" /></label>
+      <button id="connect_btn" onclick="connect()">Connect</button>
+    </fieldset>
+    <div>
+      <select id="to_select" disabled="disabled">
+        <option value="publish" selected="selected">Publish to...</option>
+        <option value="chat">Chat to...</option>
+      </select>
+      <input type="text" id="to_field" disabled="disabled" />
+      <label> Message: <input type="text" id="message_field" disabled="disabled" /></label>
+      <button id="send_btn" onclick="send()" disabled="disabled">Send</button>
+    </div>
+    <div style="width: 600px; height: 400px; border-style: solid; border-width: 1px; overflow-y:auto">
+      <ul id="chat_text" style="list-style-type: none"></ul>
+    </div>
+
+    <script type="text/javascript">
+        var creditial = prompt("Please enter your APPKEY APPSECRET APPID (Seperated by space)", "<APPKEY> <APPSECRET> <APPID>");
+        const APPKEY = creditial.split(" ")[0];
+        const APPSECRET = creditial.split(" ")[1];
+        const APPID = creditial.split(" ")[2];
+        var microgear = Microgear.create({
+          gearkey: APPKEY,
+          gearsecret: APPSECRET
+        });
+
+        microgear.on('message',function(topic,msg) {
+          console.log(msg);
+          var li = document.createElement("li");
+          li.appendChild(document.createTextNode(msg));
+          document.getElementById("chat_text").appendChild(li);
+        });
+
+        microgear.on('connected', function() {
+          console.log("connected");
+          microgear.subscribe(document.getElementById("subscribe_to").value);
+          if (document.getElementById("name").value != "") {
+            microgear.setname(document.getElementById("name").value);
+          }
+
+          document.getElementById("to_select").disabled = "";
+          document.getElementById("to_field").disabled = "";
+          document.getElementById("to_field").value = document.getElementById("subscribe_to").value;
+          document.getElementById("message_field").disabled = "";
+          document.getElementById("send_btn").disabled = "";
+          document.getElementById("subscribe_to").disabled = "disabled";
+          document.getElementById("name").disabled = "disabled";
+          document.getElementById("connect_btn").disabled = "disabled";
+        });
+
+        window.addEventListener("beforeunload", function (event) {
+        });
+
+        function send() {
+          if (document.getElementById('to_select').value == "publish") {
+            microgear.publish(document.getElementById("to_field").value,document.getElementById("message_field").value);
+          } else if (document.getElementById('to_select').value == "chat") {
+            microgear.chat(document.getElementById("to_field").value,document.getElementById("message_field").value);
+          }
+
+        }
+
+        function connect() {
+          microgear.resettoken(function(err) {
+            microgear.connect(APPID);
+          });
+        }
+
+    </script>
+  </body>
+</html>
