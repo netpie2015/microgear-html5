@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Microger Chat</title>
     <script src="https://netpie.io/microgear.js"></script>
-	  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <!-- Optional theme -->
@@ -198,7 +198,7 @@
         color: gray;
       }
     </style>
-	  <script>
+    <script>
       var member = [];
       var autoscroll = true;
       var name = "";
@@ -269,7 +269,7 @@
         });
         
       }
-  	</script>
+    </script>
   </head>
   <body onunload="disconnect()">
     <div class="container-fluid" id="container_flow">
@@ -297,13 +297,13 @@
           </div><!--/.nav-collapse -->
         </div>
       </nav>
-    	<div class="row">
-    		<div class="col-sm-3 col_control" id="col_control">
+      <div class="row">
+        <div class="col-sm-3 col_control" id="col_control">
           <br>
-    			<div id="logo" class="row">
-    				<div class="center_"><img src="http://i.imghub.co/qdxWO.png" class="logo"></div>
-    			</div>
-    			<hr>
+          <div id="logo" class="row">
+            <div class="center_"><img src="http://i.imghub.co/qdxWO.png" class="logo"></div>
+          </div>
+          <hr>
           <br>
           <form action="javascript:setInformation()" id="action_form1">
             <div id="information" class="row center_">
@@ -316,7 +316,7 @@
             </div>
           </form>
           <br>
-    			<div id="status" class="row center-block">
+          <div id="status" class="row center-block">
             <div class="panel panel-primary">
               <div class="panel-heading">
                 <h3 class="panel-title">Who's Online!</h3>
@@ -326,16 +326,15 @@
                 </table>
               </div>
             </div>
-    			</div>
-    			<br>
-    		</div>
-    		<div class="col-sm-9 col-sm-offset-3 col-xs-12  col_console">
+          </div>
+          <br>
+        </div>
+        <div class="col-sm-9 col-sm-offset-3 col-xs-12  col_console">
           <div class="box_console" id="box_console">
             <span id="console_connect"><h1>Microgear Chat</h1></span>
           </div>
           <div id="msgbar" class="row">
-			      <div id="data"></div>
-            <div id="bottom" class="buttom"><a href="bottom"></a></div>
+            <div id="data"></div>
           </div>
           <div class="row chat_tool" id="chat">
             <div class="input-group">
@@ -345,8 +344,9 @@
               </span>
             </div>
           </div>
-    		</div>
-    	</div>
+          <div id="bottom" class="buttom"><a href="bottom"></a></div>
+        </div>
+      </div>
     </div>
   </body>
   <script type="text/javascript">
@@ -358,6 +358,7 @@
         var msg = document.getElementById('msg').value;
         if(msg!=""){
           document.getElementById("data").innerHTML += "<div class="+'"floating-right-box msg"'+">"+msg+"</div>"+"</div>"+"<div class="+'"clear-box"'+">"+"</div><br>";
+          auto_scroll();
           document.getElementById('msg').value = "";
           microgear.publish("/chat","msg#"+name+"#"+msg);
         }
@@ -367,6 +368,7 @@
       var msg = document.getElementById('msg').value;
       if(msg!=""){
         document.getElementById("data").innerHTML += "<div class="+'"floating-right-box msg"'+">"+msg+"</div>"+"</div>"+"<div class="+'"clear-box"'+">"+"</div><br>";
+        auto_scroll();
         document.getElementById('msg').value = "";
         microgear.publish("/chat","msg#"+name+"#"+msg);
       }
@@ -376,7 +378,7 @@
       $win.scroll(function () {
         if ($win.height() + $win.scrollTop()< $(document).height())
           autoscroll = false;
-        else if ($win.height() + $win.scrollTop()== $(document).height()) {
+        else if (($win.height() + $win.scrollTop()>= $(document).height())||$('#data').height()+$('#chat').height()>=$win.height()) {
           autoscroll = true;
         }
       });
