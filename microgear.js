@@ -25,7 +25,7 @@ const GEARAPIPORT = '8080';
  * Microgear API version
  * @type {String}
  */
-const APIVER = '1.0w';
+const MGREV = 'WJS1a;';
 
 /**
  * Constants
@@ -34,14 +34,17 @@ const TOKENCACHEFILENAME = 'microgear.cache';
 const MINTOKDELAYTIME = 100;
 const MAXTOKDELAYTIME = 30000;
 const DEBUGMODE = false;
+const MONLOOPINTERVAL = 1000;
+const RETRYCONNECTIONINTERVAL = 5000;
 
 /**
  * Variables
  */
 var toktime = MINTOKDELAYTIME;
-var _microgear = function(gearkey,gearsecret) {
+var _microgear = function(gearkey,gearsecret,gearlabel) {
 	this.gearkey = gearkey;
 	this.gearsecret = gearsecret;
+    this.gearlabel = gearlabel?gearlabel.substring(0,16):null;
 	this.client = null;
 	this.subscriptions = [];
 	this.requesttoken = {};
@@ -49,11 +52,15 @@ var _microgear = function(gearkey,gearsecret) {
 }
 var Microgear = {
 	create : function(param) {
+	    var gkey = param.key?param.key:param.gearkey?param.gearkey:"";
+    	var gsecret = param.secret?param.secret:param.gearsecret?param.gearsecret:"";
+	    var glabel = param.label?param.label:param.gearlabel?param.gearlabel:"";
+
 		if (!param) return;
 		var scope = param.scope;
 
-		if (param.gearkey && param.gearsecret) {
-			var mg = new _microgear(param.gearkey,param.gearsecret);
+		if (gkey && gsecret) {
+			var mg = new _microgear(gkey,gsecret,glabel);
 			mg.scope = param.scope;
 			self = mg;
 			return mg;
@@ -823,6 +830,7 @@ Paho.MQTT = (function (global) {
 	ClientImpl.prototype.onConnectionLost;
 	ClientImpl.prototype.onMessageDelivered;
 	ClientImpl.prototype.onMessageArrived;
+	ClientImpl.prototype.onError;
 	ClientImpl.prototype.traceFunction;
 	ClientImpl.prototype._msg_queue = null;
 	ClientImpl.prototype._connectTimeout;
@@ -1219,6 +1227,13 @@ Paho.MQTT = (function (global) {
 					if (this.connectOptions.uris)
 						this.hostIndex = this.connectOptions.uris.length;
 				} else {
+					// modified br NETPIE
+					if (wireMessage.returnCode > 0 && wireMessage.returnCode <= 5) {
+						if (this.onError) {
+							this.onError({code:wireMessage.returnCode,msg:CONNACK_RC[wireMessage.returnCode]});
+						}
+					}
+
 					this._disconnected(ERROR.CONNACK_RETURNCODE.code , format(ERROR.CONNACK_RETURNCODE, [wireMessage.returnCode, CONNACK_RC[wireMessage.returnCode]]));
 					break;
 				}
@@ -1656,6 +1671,14 @@ Paho.MQTT = (function (global) {
 				throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnMessageArrived, "onMessageArrived"]));
 		};
 
+		this._getOnError = function() { return client.onError; };
+		this._setOnError = function(newOnError) { 
+			if (typeof newOnError === "function")
+				client.onError = newOnError;
+			else 
+				throw new Error(format(ERROR.INVALID_TYPE, [typeof newOnError, "onError"]));
+		};
+
 		this._getTrace = function() { return client.traceFunction; };
 		this._setTrace = function(trace) {
 			if(typeof trace === "function"){
@@ -2014,6 +2037,9 @@ Paho.MQTT = (function (global) {
 		
 		get onMessageArrived() { return this._getOnMessageArrived(); },
 		set onMessageArrived(newOnMessageArrived) { this._setOnMessageArrived(newOnMessageArrived); },
+
+		get onError() { return this._getOnError(); },
+		set onError(newOnError) { this._setOnError(newOnError); },
 
 		get trace() { return this._getTrace(); },
 		set trace(newTraceFunction) { this._setTrace(newTraceFunction); }	
@@ -2403,11 +2429,12 @@ OAuth.prototype.toHeader = function(oauth_data) {
  * Create a random word characters string with input length
  * @return {String} a random word characters string
  */
-OAuth.prototype.getNonce = function() {
+OAuth.prototype.getNonce = function(len) {
     var word_characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     var result = '';
+    if (!len) len = this.nonce_length;
 
-    for(var i = 0; i < this.nonce_length; i++) {
+    for(var i = 0; i < len; i++) {
         result += word_characters[parseInt(Math.random() * word_characters.length, 10)];
     }
 
@@ -2572,8 +2599,11 @@ _microgear.prototype.gettoken = function(callback) {
 	    signature_method: 'HMAC-SHA1'
 	});
 
-
-	if (validateLocalStorage()) {
+	if (validateLocalStorage() && (!self.accesstoken || !self.accesstoken.token)) {
+		var skey = localStorage.getItem("microgear.key");
+		if (skey && skey!=self.gearkey) {
+			self.resettoken();
+		}
 		self.accesstoken = jsonparse(localStorage.getItem("microgear.accesstoken"));
 	}
 
@@ -2581,18 +2611,20 @@ _microgear.prototype.gettoken = function(callback) {
 		if (typeof(callback)=='function') callback(3);
 	}
 	else {
-
-		if (validateLocalStorage()) {
+		if (!self.requesttoken && validateLocalStorage()) {
+			var skey = localStorage.getItem("microgear.key");
+			if (skey && skey!=self.gearkey) {
+				self.resettoken();
+			}
 			self.requesttoken = jsonparse(localStorage.getItem("microgear.requesttoken"));
 		}
 		if (self.requesttoken && self.requesttoken.token && self.requesttoken.secret) {
 
 			var request_data = {
-			    url: 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/oauth/access_token',
+			    url: 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/api/atoken',
 			    method: 'POST',
 			    data: {
-					oauth_callback: 'scope=&appid='+self.appid+'&verifier=1234',
-					oauth_verifier: '1234'
+					oauth_verifier: self.requesttoken.verifier
 			    }
 			};
 			var http = createCORSRequest(request_data.method, request_data.url);
@@ -2616,15 +2648,16 @@ _microgear.prototype.gettoken = function(callback) {
 								self.accesstoken.token = r.oauth_token;
 					        	self.accesstoken.secret = r.oauth_token_secret;
 					        	self.accesstoken.endpoint = unescape(r.endpoint);
-
 		    					// generate revokecode
 								var hkey = self.accesstoken.secret+'&'+self.gearsecret;
 							    var revokecode = CryptoJS.HmacSHA1(self.accesstoken.token,hkey).toString(CryptoJS.enc.Base64).replace(/\//g,'_');
-
 					        	self.accesstoken.revokecode = unescape(revokecode);
 
-								if (validateLocalStorage()) {
-									localStorage.setItem("microgear.accesstoken", JSON.stringify(self.accesstoken));
+					        	if (r.flag != 'S') {
+									if (validateLocalStorage()) {
+										localStorage.setItem("microgear.key", self.gearkey);
+										localStorage.setItem("microgear.accesstoken", JSON.stringify(self.accesstoken));
+									}
 								}
 
 								if (typeof(callback)=='function') callback(2);
@@ -2645,11 +2678,15 @@ _microgear.prototype.gettoken = function(callback) {
 			}
 		}
 		else {
+            var verifier;
+            if (this.gearlabel) verifier = MGREV+this.gearlabel;
+            else verifier = MGREV+'_'+OAuth.prototype.getNonce(7);
+
 			var request_data = {
-			    url: 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/oauth/request_token',
+			    url: 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/api/rtoken',
 			    method: 'POST',
 			    data: {
-					oauth_callback: 'scope=&appid='+self.appid+'&verifier=1234',
+					oauth_callback: 'scope=&appid='+self.appid+'&verifier='+verifier,
 			    }
 			};
 			var http = createCORSRequest(request_data.method, request_data.url);
@@ -2667,6 +2704,7 @@ _microgear.prototype.gettoken = function(callback) {
 					        	self.requesttoken = {};
 					        	self.requesttoken.token = r.oauth_token;
 					        	self.requesttoken.secret = r.oauth_token_secret;
+					        	self.requesttoken.verifier = verifier;
 
 								if (validateLocalStorage()) {
 									localStorage.setItem("microgear.requesttoken", JSON.stringify(self.requesttoken));
@@ -2696,11 +2734,14 @@ _microgear.prototype.brokerconnect = function(callback) {
 	self.client = new Paho.MQTT.Client(b[0], Number(8083), self.accesstoken.token);
 	self.client.onConnectionLost = _onConnectionLost;
 	self.client.onMessageArrived = _onMessageArrived;
+	self.client.onError = _onError;
 	self.client.connect({userName: mqttusername,password: mqttpassword, onSuccess:_onConnect});
 }
 
 function initiateconnection(done) {
+	self.lastretryconnection = Date.now();
 	self.gettoken(function(state) {
+		self.mgstate = state;
 		switch (state) {
 			case 0 : 	/* No token issue */
 						if (self.appkey || self.secret)
@@ -2709,17 +2750,20 @@ function initiateconnection(done) {
 							throw new Error('Error: request token is not issued, please check your consumerkey and consumersecret');
 						return;
 			case 1 :	/* Request token issued or prepare to request request token again */
+						/*
 						setTimeout(function() {
 							if (toktime < MAXTOKDELAYTIME) toktime *= 2;
 							initiateconnection(done);
 						},toktime);
+						*/
+						initiateconnection(done);
 						return;
 			case 2 :	/* Access token issued */
 						initiateconnection(done);
-						toktime = 1;
+						//toktime = 1;
 						return;
 			case 3 :	/* Has access token ready for connecting broker */
-						toktime = 1;
+						//toktime = 1;
 						self.brokerconnect(function() {
 							if (done) done();
 						});
@@ -2754,6 +2798,20 @@ function _onConnect() {
 	_microgear.prototype.emit('connected');
 }
 
+function _onError(err) {
+	//console.log(JSON.stringify(err));
+	if (err.code == 4) {
+		_microgear.prototype.emit('info','invalid token, requesting a new one');
+		if (validateLocalStorage()) {
+			self.requesttoken = {};
+			self.accesstoken = {};
+			localStorage.setItem("microgear.key", "");
+			localStorage.setItem("microgear.accesstoken", JSON.stringify({}));
+			localStorage.setItem("microgear.requesttoken", JSON.stringify({}));
+		}
+	}
+}
+
 function _onMessageArrived(msg) {
 	var topic = msg.destinationName;
 	var message = msg.payloadString;
@@ -2778,20 +2836,30 @@ function _onMessageArrived(msg) {
 }
 
 function _onConnectionLost(responseObject) {
-	if (responseObject.errorCode !== 0) {
-    	console.log("onConnectionLost:"+responseObject.errorMessage);
 
-		initiateconnection(function() {
-			if (self.debugmode) console.log('auto reconnect');
-		});
-    }
 }
 
+function monloop() {
+	console.log(self.client?self.client.isConnected():"xxx");
+	if (self.onlinemode && self.client && !self.client.isConnected()) {
+		if (Date.now() - self.lastretryconnection > RETRYCONNECTIONINTERVAL) {
+			self.lastretryconnection = Date.now();
+			initiateconnection(function() {
+			});
+		}
+	}
+}
+setInterval(monloop,MONLOOPINTERVAL);
+
 _microgear.prototype.connect = function(_appid, done) {
+	this.onlinemode = true;
 	self.appid = _appid;
-
 	initiateconnection(done);
+}
 
+_microgear.prototype.disconnected = function() {
+	this.onlinemode = false;
+	ClientImpl.prototype.disconnect();
 }
 
 _microgear.prototype.subscribe = function(topic) {
@@ -2866,6 +2934,7 @@ _microgear.prototype.resettoken = function (callback) {
 	 								if (validateLocalStorage()) {
 										self.requesttoken = {};
 										self.accesstoken = {};
+										localStorage.setItem("microgear.key", "");
 										localStorage.setItem("microgear.accesstoken", JSON.stringify({}));
 										localStorage.setItem("microgear.requesttoken", JSON.stringify({}));
 									}
@@ -2895,14 +2964,14 @@ _microgear.prototype.on('newListener', function(event,listener) {
 	switch (event) {
 		case 'present' :
 				if (self.client) {
-					if (self.client.connected) {
+					if (self.client.isConnected()) {
 						self.subscribe('/@present');
 					}
 				}
 				break;
 		case 'absent' :
 				if (self.client) {
-					if (self.client.connected) {
+					if (self.client.isConnected()) {
 						self.subscribe('/@absent');
 					}
 				}
