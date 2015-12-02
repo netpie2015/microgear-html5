@@ -2840,7 +2840,7 @@ function _onConnectionLost(responseObject) {
 }
 
 function monloop() {
-	console.log(self.client?self.client.isConnected():"xxx");
+	//console.log(self.client?self.client.isConnected():"xxx");
 	if (self.onlinemode && self.client && !self.client.isConnected()) {
 		if (Date.now() - self.lastretryconnection > RETRYCONNECTIONINTERVAL) {
 			self.lastretryconnection = Date.now();
