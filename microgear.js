@@ -2588,7 +2588,7 @@ var self = null;
 
 _microgear.prototype = new EventEmitter;
 
-_microgear.prototype.gettoken = function(callback) {
+_microgear.prototype.createtoken = function(callback) {
 
 	/* consumer key & secret */
 	var oauth = OAuth({
@@ -2740,7 +2740,7 @@ _microgear.prototype.brokerconnect = function(callback) {
 
 function initiateconnection(done) {
 	self.lastretryconnection = Date.now();
-	self.gettoken(function(state) {
+	self.createtoken(function(state) {
 		self.mgstate = state;
 		switch (state) {
 			case 0 : 	/* No token issue */
@@ -2841,7 +2841,7 @@ function _onConnectionLost(responseObject) {
 
 function monloop() {
 	//console.log(self.client?self.client.isConnected():"xxx");
-	if (self.onlinemode && self.client && !self.client.isConnected()) {
+	if (self && self.onlinemode && self.client && !self.client.isConnected()) {
 		if (Date.now() - self.lastretryconnection > RETRYCONNECTIONINTERVAL) {
 			self.lastretryconnection = Date.now();
 			initiateconnection(function() {
@@ -2922,6 +2922,12 @@ _microgear.prototype.chat = function (gearname, message, callback) {
 	self.publish('/gearname/'+gearname, message, callback);
 }
 
+_microgear.prototype.gettoken = function() {
+	var tok = {token:self.accesstoken.token, secret:self.accesstoken.secret};
+	console.log(tok);
+	return tok;
+}
+
 _microgear.prototype.resettoken = function (callback) {
 	var atok = jsonparse(localStorage.getItem("microgear.accesstoken"));
 	if (atok && atok.token && atok.revokecode) {
@@ -2955,7 +2961,6 @@ _microgear.prototype.resettoken = function (callback) {
     	xmlHttp.send(null);
 	}
 	else {
-		console.log(1111);
 		if (typeof(callback)=='function') callback();
 	}
 }
