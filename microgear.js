@@ -2836,11 +2836,11 @@ function _onMessageArrived(msg) {
 }
 
 function _onConnectionLost(responseObject) {
-
+	_microgear.prototype.emit('disconnected');
 }
 
+// connection monitor loop
 function monloop() {
-	//console.log(self.client?self.client.isConnected():"xxx");
 	if (self && self.onlinemode && self.client && !self.client.isConnected()) {
 		if (Date.now() - self.lastretryconnection > RETRYCONNECTIONINTERVAL) {
 			self.lastretryconnection = Date.now();
@@ -2857,9 +2857,9 @@ _microgear.prototype.connect = function(_appid, done) {
 	initiateconnection(done);
 }
 
-_microgear.prototype.disconnected = function() {
+_microgear.prototype.disconnect = function() {
 	this.onlinemode = false;
-	ClientImpl.prototype.disconnect();
+	self.client.disconnect();
 }
 
 _microgear.prototype.subscribe = function(topic) {
