@@ -41,10 +41,10 @@ const RETRYCONNECTIONINTERVAL = 5000;
  * Variables
  */
 var toktime = MINTOKDELAYTIME;
-var _microgear = function(gearkey,gearsecret,gearlabel) {
+var _microgear = function(gearkey,gearsecret,gearalias) {
 	this.gearkey = gearkey;
 	this.gearsecret = gearsecret;
-    this.gearlabel = gearlabel?gearlabel.substring(0,16):null;
+    this.gearalias = gearalias?gearalias.substring(0,16):null;
 	this.client = null;
 	this.subscriptions = [];
 	this.requesttoken = {};
@@ -54,13 +54,13 @@ var Microgear = {
 	create : function(param) {
 	    var gkey = param.key?param.key:param.gearkey?param.gearkey:"";
     	var gsecret = param.secret?param.secret:param.gearsecret?param.gearsecret:"";
-	    var glabel = param.label?param.label:param.gearlabel?param.gearlabel:"";
+	    var galias = param.alias?param.alias:param.gearalias?param.gearalias:"";
 
 		if (!param) return;
 		var scope = param.scope;
 
 		if (gkey && gsecret) {
-			var mg = new _microgear(gkey,gsecret,glabel);
+			var mg = new _microgear(gkey,gsecret,galias);
 			mg.scope = param.scope;
 			self = mg;
 			return mg;
@@ -2679,7 +2679,7 @@ _microgear.prototype.createtoken = function(callback) {
 		}
 		else {
             var verifier;
-            if (this.gearlabel) verifier = MGREV+this.gearlabel;
+            if (this.gearalias) verifier = MGREV+this.gearalias;
             else verifier = MGREV+'_'+OAuth.prototype.getNonce(7);
 
 			var request_data = {
@@ -2901,12 +2901,22 @@ _microgear.prototype.publish = function(_topic,_msg) {
 	self.client.send(message);
 }
 
+/**
+ * Deprecated
+*/
 _microgear.prototype.setname = function(gearname) {
 	if (self.gearname) self.unsubscribe('/gearname/'+self.gearname);
 	self.subscribe('/gearname/'+gearname, function() {
 		self.gearname = gearname;
 		if (typeof(callback) == 'function') callback();
 	});
+}
+
+_microgear.prototype.setalias = function (gearalias, callback) {
+    self.publish('/@setalias/'+gearalias, "", {}, function() {
+       self.gearalias = gearalias;
+       if (typeof(callback) == 'function') callback();
+    });
 }
 
 _microgear.prototype.unsetname = function (callback) {
