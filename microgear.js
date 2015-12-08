@@ -25,7 +25,7 @@ const GEARAPIPORT = '8080';
  * Microgear API version
  * @type {String}
  */
-const MGREV = 'WJS1a;';
+const MGREV = 'WJS1a';
 
 /**
  * Constants
@@ -2678,15 +2678,16 @@ _microgear.prototype.createtoken = function(callback) {
 			}
 		}
 		else {
+
             var verifier;
-            if (this.gearalias) verifier = MGREV+this.gearalias;
-            else verifier = MGREV+'_'+OAuth.prototype.getNonce(7);
+            if (this.gearalias) verifier = this.gearalias;
+            else verifier = MGREV;
 
 			var request_data = {
 			    url: 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/api/rtoken',
 			    method: 'POST',
 			    data: {
-					oauth_callback: 'scope=&appid='+self.appid+'&verifier='+verifier,
+					oauth_callback: 'scope=&appid='+self.appid+'&mgrev='+MGREV+'&verifier='+verifier,
 			    }
 			};
 			var http = createCORSRequest(request_data.method, request_data.url);
