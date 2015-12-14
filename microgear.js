@@ -2896,9 +2896,11 @@ _microgear.prototype.unsubscribe = function(topic,callback) {
 	});
 }
 
-_microgear.prototype.publish = function(_topic,_msg) {
+_microgear.prototype.publish = function(_topic,_msg,_retained) {
 	var message = new Paho.MQTT.Message(_msg);
 	message.destinationName = '/'+self.appid+_topic;
+
+	if (_retained) message.retained = true;
 	self.client.send(message);
 }
 
