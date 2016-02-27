@@ -208,7 +208,7 @@ microgear.on("error", function(err) {
 เมื่อมี message เข้ามา จะเกิด event นี้ขึ้น พร้อมกับส่งผ่านข้อมูลเกี่ยวกับ message นั้นมาทาง argument ของ callback function
 ```
 microgear.on("message", function(topic,msg) {
-	console.log("Incoming message: "+mesage);
+	console.log("Incoming message: "+msg);
 });
 ```
 
