@@ -11,21 +11,24 @@
  *       https://github.com/ddo/oauth-1.0a
  *  - CryptoJS     
  *       https://code.google.com/p/crypto-js/
- *       
+ *  - Store.js
+ *       https://github.com/marcuswestin/store.js
+ *     
  *******************************************************************************/
 
 /**
  * General API Endpoint
- * @type {String}
  */
 const GEARAPIADDRESS = 'ga.netpie.io';
 const GEARAPIPORT = '8080';
+const GEARAPISECUREPORT = '8081';
+const GBWSPORT = '8083';
+const GBWSSPORT = '8084';
 
 /**
  * Microgear API version
- * @type {String}
  */
-const MGREV = 'WJS1a';
+const MGREV = 'WJS1b';
 
 /**
  * Constants
@@ -41,7 +44,10 @@ const RETRYCONNECTIONINTERVAL = 5000;
  * Variables
  */
 var toktime = MINTOKDELAYTIME;
+var gearauthurl;
+
 var _microgear = function(gearkey,gearsecret,gearalias) {
+	this.securemode = false;
 	this.gearkey = gearkey;
 	this.gearsecret = gearsecret;
     this.gearalias = gearalias?gearalias.substring(0,16):null;
@@ -1056,11 +1062,11 @@ Paho.MQTT = (function (global) {
 			default:
 				throw Error(format(ERROR.INVALID_STORED_DATA, [key, storedMessage]));
 		}
-		localStorage.setItem(prefix+this._localKey+wireMessage.messageIdentifier, JSON.stringify(storedMessage));
+		storage.set(prefix+this._localKey+wireMessage.messageIdentifier, JSON.stringify(storedMessage));
 	};
 	
 	ClientImpl.prototype.restore = function(key) {    	
-		var value = localStorage.getItem(key);
+		var value = storage.get(key);
 		var storedMessage = JSON.parse(value);
 		
 		var wireMessage = new WireMessage(storedMessage.type, storedMessage);
@@ -2525,12 +2531,202 @@ Source: https://github.com/benjreinhart/node-event-emitter
  */
 (function(b){function a(b,d){if({}.hasOwnProperty.call(a.cache,b))return a.cache[b];var e=a.resolve(b);if(!e)throw new Error('Failed to resolve module '+b);var c={id:b,require:a,filename:b,exports:{},loaded:!1,parent:d,children:[]};d&&d.children.push(c);var f=b.slice(0,b.lastIndexOf('/')+1);return a.cache[b]=c.exports,e.call(c.exports,c,c.exports,f,b),c.loaded=!0,a.cache[b]=c.exports}a.modules={},a.cache={},a.resolve=function(b){return{}.hasOwnProperty.call(a.modules,b)?a.modules[b]:void 0},a.define=function(b,c){a.modules[b]=c},a.define('/index.js',function(c,d,e,f){function b(){b.init.call(this)}var a={};a.isObject=function a(b){return typeof b==='object'&&b!==null},a.isNumber=function a(b){return typeof b==='number'},a.isUndefined=function a(b){return b===void 0},a.isFunction=function a(b){return typeof b==='function'},c.exports=b,b.EventEmitter=b,b.prototype._events=undefined,b.prototype._maxListeners=undefined,b.defaultMaxListeners=10,b.init=function(){this._events=this._events||{},this._maxListeners=this._maxListeners||undefined},b.prototype.setMaxListeners=function(b){if(!a.isNumber(b)||b<0||isNaN(b))throw TypeError('n must be a positive number');return this._maxListeners=b,this},b.prototype.emit=function(h){var f,c,d,e,b,g;if(this._events||(this._events={}),h==='error'&&!this._events.error)throw f=arguments[1],f instanceof Error?f:Error('Uncaught, unspecified "error" event.');if(c=this._events[h],a.isUndefined(c))return!1;if(a.isFunction(c))switch(arguments.length){case 1:c.call(this);break;case 2:c.call(this,arguments[1]);break;case 3:c.call(this,arguments[1],arguments[2]);break;default:d=arguments.length;e=new Array(d-1);for(b=1;b<d;b++)e[b-1]=arguments[b];c.apply(this,e)}else if(a.isObject(c)){for(d=arguments.length,e=new Array(d-1),b=1;b<d;b++)e[b-1]=arguments[b];for(g=c.slice(),d=g.length,b=0;b<d;b++)g[b].apply(this,e)}return!0},b.prototype.addListener=function(c,d){var e;if(!a.isFunction(d))throw TypeError('listener must be a function');if(this._events||(this._events={}),this._events.newListener&&this.emit('newListener',c,a.isFunction(d.listener)?d.listener:d),this._events[c]?a.isObject(this._events[c])?this._events[c].push(d):this._events[c]=[this._events[c],d]:this._events[c]=d,a.isObject(this._events[c])&&!this._events[c].warned){var e;a.isUndefined(this._maxListeners)?e=b.defaultMaxListeners:e=this._maxListeners,e&&e>0&&this._events[c].length>e&&(this._events[c].warned=!0,a.isFunction(console.error)&&console.error('(node) warning: possible EventEmitter memory leak detected. %d listeners added. Use emitter.setMaxListeners() to increase limit.',this._events[c].length),a.isFunction(console.trace)&&console.trace())}return this},b.prototype.on=b.prototype.addListener,b.prototype.once=function(e,b){function c(){this.removeListener(e,c),d||(d=!0,b.apply(this,arguments))}if(!a.isFunction(b))throw TypeError('listener must be a function');var d=!1;return c.listener=b,this.on(e,c),this},b.prototype.removeListener=function(d,c){var b,f,g,e;if(!a.isFunction(c))throw TypeError('listener must be a function');if(!(this._events&&this._events[d]))return this;if(b=this._events[d],g=b.length,f=-1,b===c||a.isFunction(b.listener)&&b.listener===c)delete this._events[d],this._events.removeListener&&this.emit('removeListener',d,c);else if(a.isObject(b)){for(e=g;e-->0;)if(b[e]===c||b[e].listener&&b[e].listener===c){f=e;break}if(f<0)return this;b.length===1?(b.length=0,delete this._events[d]):b.splice(f,1),this._events.removeListener&&this.emit('removeListener',d,c)}return this},b.prototype.removeAllListeners=function(c){var d,b;if(!this._events)return this;if(!this._events.removeListener)return arguments.length===0?this._events={}:this._events[c]&&delete this._events[c],this;if(arguments.length===0){for(d in this._events){if(d==='removeListener')continue;this.removeAllListeners(d)}return this.removeAllListeners('removeListener'),this._events={},this}if(b=this._events[c],a.isFunction(b))this.removeListener(c,b);else if(Array.isArray(b))while(b.length)this.removeListener(c,b[b.length-1]);return delete this._events[c],this},b.prototype.listeners=function(b){var c;return this._events&&this._events[b]?a.isFunction(this._events[b])?c=[this._events[b]]:c=this._events[b].slice():c=[],c},b.listenerCount=function(b,d){var c;return b._events&&b._events[d]?a.isFunction(b._events[d])?c=1:c=b._events[d].length:c=0,c}}),b.EventEmitter=a('/index.js')}.call(this,this))
 
+/*
+Store.js
+Copyright (c) 2010-2016 Marcus Westin
+Source: https://github.com/marcuswestin/store.js
+*/
+var storejs = (function() {
+	var store = {},
+		win = (typeof window != 'undefined' ? window : global),
+		doc = win.document,
+		localStorageName = 'localStorage',
+		scriptTag = 'script',
+		storage
+
+	store.disabled = false
+	store.version = '1.3.20'
+	store.set = function(key, value) {}
+	store.get = function(key, defaultVal) {}
+	store.has = function(key) { return store.get(key) !== undefined }
+	store.remove = function(key) {}
+	store.clear = function() {}
+	store.transact = function(key, defaultVal, transactionFn) {
+		if (transactionFn == null) {
+			transactionFn = defaultVal
+			defaultVal = null
+		}
+		if (defaultVal == null) {
+			defaultVal = {}
+		}
+		var val = store.get(key, defaultVal)
+		transactionFn(val)
+		store.set(key, val)
+	}
+	store.getAll = function() {}
+	store.forEach = function() {}
+
+	store.serialize = function(value) {
+		return JSON.stringify(value)
+	}
+	store.deserialize = function(value) {
+		if (typeof value != 'string') { return undefined }
+		try { return JSON.parse(value) }
+		catch(e) { return value || undefined }
+	}
+
+	// Functions to encapsulate questionable FireFox 3.6.13 behavior
+	// when about.config::dom.storage.enabled === false
+	// See https://github.com/marcuswestin/store.js/issues#issue/13
+	function isLocalStorageNameSupported() {
+		try { return (localStorageName in win && win[localStorageName]) }
+		catch(err) { return false }
+	}
+
+	if (isLocalStorageNameSupported()) {
+		storage = win[localStorageName]
+		store.set = function(key, val) {
+			if (val === undefined) { return store.remove(key) }
+			storage.setItem(key, store.serialize(val))
+			return val
+		}
+		store.get = function(key, defaultVal) {
+			var val = store.deserialize(storage.getItem(key))
+			return (val === undefined ? defaultVal : val)
+		}
+		store.remove = function(key) { storage.removeItem(key) }
+		store.clear = function() { storage.clear() }
+		store.getAll = function() {
+			var ret = {}
+			store.forEach(function(key, val) {
+				ret[key] = val
+			})
+			return ret
+		}
+		store.forEach = function(callback) {
+			for (var i=0; i<storage.length; i++) {
+				var key = storage.key(i)
+				callback(key, store.get(key))
+			}
+		}
+	} else if (doc && doc.documentElement.addBehavior) {
+		var storageOwner,
+			storageContainer
+		// Since #userData storage applies only to specific paths, we need to
+		// somehow link our data to a specific path.  We choose /favicon.ico
+		// as a pretty safe option, since all browsers already make a request to
+		// this URL anyway and being a 404 will not hurt us here.  We wrap an
+		// iframe pointing to the favicon in an ActiveXObject(htmlfile) object
+		// (see: http://msdn.microsoft.com/en-us/library/aa752574(v=VS.85).aspx)
+		// since the iframe access rules appear to allow direct access and
+		// manipulation of the document element, even for a 404 page.  This
+		// document can be used instead of the current document (which would
+		// have been limited to the current path) to perform #userData storage.
+		try {
+			storageContainer = new ActiveXObject('htmlfile')
+			storageContainer.open()
+			storageContainer.write('<'+scriptTag+'>document.w=window</'+scriptTag+'><iframe src="/favicon.ico"></iframe>')
+			storageContainer.close()
+			storageOwner = storageContainer.w.frames[0].document
+			storage = storageOwner.createElement('div')
+		} catch(e) {
+			// somehow ActiveXObject instantiation failed (perhaps some special
+			// security settings or otherwse), fall back to per-path storage
+			storage = doc.createElement('div')
+			storageOwner = doc.body
+		}
+		var withIEStorage = function(storeFunction) {
+			return function() {
+				var args = Array.prototype.slice.call(arguments, 0)
+				args.unshift(storage)
+				// See http://msdn.microsoft.com/en-us/library/ms531081(v=VS.85).aspx
+				// and http://msdn.microsoft.com/en-us/library/ms531424(v=VS.85).aspx
+				storageOwner.appendChild(storage)
+				storage.addBehavior('#default#userData')
+				storage.load(localStorageName)
+				var result = storeFunction.apply(store, args)
+				storageOwner.removeChild(storage)
+				return result
+			}
+		}
+
+		// In IE7, keys cannot start with a digit or contain certain chars.
+		// See https://github.com/marcuswestin/store.js/issues/40
+		// See https://github.com/marcuswestin/store.js/issues/83
+		var forbiddenCharsRegex = new RegExp("[!\"#$%&'()*+,/\\\\:;<=>?@[\\]^`{|}~]", "g")
+		var ieKeyFix = function(key) {
+			return key.replace(/^d/, '___$&').replace(forbiddenCharsRegex, '___')
+		}
+		store.set = withIEStorage(function(storage, key, val) {
+			key = ieKeyFix(key)
+			if (val === undefined) { return store.remove(key) }
+			storage.setAttribute(key, store.serialize(val))
+			storage.save(localStorageName)
+			return val
+		})
+		store.get = withIEStorage(function(storage, key, defaultVal) {
+			key = ieKeyFix(key)
+			var val = store.deserialize(storage.getAttribute(key))
+			return (val === undefined ? defaultVal : val)
+		})
+		store.remove = withIEStorage(function(storage, key) {
+			key = ieKeyFix(key)
+			storage.removeAttribute(key)
+			storage.save(localStorageName)
+		})
+		store.clear = withIEStorage(function(storage) {
+			var attributes = storage.XMLDocument.documentElement.attributes
+			storage.load(localStorageName)
+			for (var i=attributes.length-1; i>=0; i--) {
+				storage.removeAttribute(attributes[i].name)
+			}
+			storage.save(localStorageName)
+		})
+		store.getAll = function(storage) {
+			var ret = {}
+			store.forEach(function(key, val) {
+				ret[key] = val
+			})
+			return ret
+		}
+		store.forEach = withIEStorage(function(storage, callback) {
+			var attributes = storage.XMLDocument.documentElement.attributes
+			for (var i=0, attr; attr=attributes[i]; ++i) {
+				callback(attr.name, store.deserialize(storage.getAttribute(attr.name)))
+			}
+		})
+	}
+
+	try {
+		var testKey = '__storejs__'
+		store.set(testKey, testKey)
+		if (store.get(testKey) != testKey) { store.disabled = true }
+		store.remove(testKey)
+	} catch(e) {
+		store.disabled = true
+	}
+	store.enabled = !store.disabled
+	
+	return store
+}());
 
 
 /**
  *  Microgear JS library
  *  More info available at : netpie.io
  */
+
+var bucket = {};
+var storage = {
+	get : function(key) {			
+		if (storejs.enabled) return storejs.get(key);
+		else return bucket[key];
+	},
+	set : function(key, val) {
+		if (storejs.enabled) storejs.set(key,val);
+		else bucket[key] = val;
+	}
+}
 
 function extract(response) {
 	var out = {};
@@ -2543,12 +2739,14 @@ function extract(response) {
 }
 
 function validateLocalStorage() {
-	if(typeof(Storage) !== "undefined") {
-		return true;
-	} else {
+	/*
+	if (!storage.enabled) {
 		alert('Warning: HTML5 localstorage is not available on this browser.');
 		return false;
 	}
+	else return true;
+	*/
+	return true;
 }
 
 function jsonparse(jsontext) {
@@ -2600,28 +2798,31 @@ _microgear.prototype.createtoken = function(callback) {
 	});
 
 	if (validateLocalStorage() && (!self.accesstoken || !self.accesstoken.token)) {
-		var skey = localStorage.getItem("microgear.key");
+		var skey = storage.get("microgear.key");
 		if (skey && skey!=self.gearkey) {
 			self.resettoken();
 		}
-		self.accesstoken = jsonparse(localStorage.getItem("microgear.accesstoken"));
+		self.accesstoken = jsonparse(storage.get("microgear.accesstoken"));
 	}
 
 	if (self.accesstoken && self.accesstoken.token && self.accesstoken.secret && self.accesstoken.endpoint) {
 		if (typeof(callback)=='function') callback(3);
 	}
 	else {
+		if (self.securemode) gearauthurl = 'https://'+GEARAPIADDRESS+':'+GEARAPISECUREPORT;
+		else gearauthurl = 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT;
+
 		if (!self.requesttoken && validateLocalStorage()) {
-			var skey = localStorage.getItem("microgear.key");
+			var skey = storage.get("microgear.key");
 			if (skey && skey!=self.gearkey) {
 				self.resettoken();
 			}
-			self.requesttoken = jsonparse(localStorage.getItem("microgear.requesttoken"));
+			self.requesttoken = jsonparse(storage.get("microgear.requesttoken"));
 		}
 		if (self.requesttoken && self.requesttoken.token && self.requesttoken.secret) {
 
 			var request_data = {
-			    url: 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/api/atoken',
+			    url: gearauthurl+'/api/atoken',
 			    method: 'POST',
 			    data: {
 					oauth_verifier: self.requesttoken.verifier
@@ -2655,8 +2856,8 @@ _microgear.prototype.createtoken = function(callback) {
 
 					        	if (r.flag != 'S') {
 									if (validateLocalStorage()) {
-										localStorage.setItem("microgear.key", self.gearkey);
-										localStorage.setItem("microgear.accesstoken", JSON.stringify(self.accesstoken));
+										storage.set("microgear.key", self.gearkey);
+										storage.set("microgear.accesstoken", JSON.stringify(self.accesstoken));
 									}
 								}
 
@@ -2684,7 +2885,7 @@ _microgear.prototype.createtoken = function(callback) {
             else verifier = MGREV;
 
 			var request_data = {
-			    url: 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/api/rtoken',
+				url : gearauthurl+'/api/rtoken',
 			    method: 'POST',
 			    data: {
 					oauth_callback: 'scope=&appid='+self.appid+'&mgrev='+MGREV+'&verifier='+verifier,
@@ -2708,7 +2909,7 @@ _microgear.prototype.createtoken = function(callback) {
 					        	self.requesttoken.verifier = verifier;
 
 								if (validateLocalStorage()) {
-									localStorage.setItem("microgear.requesttoken", JSON.stringify(self.requesttoken));
+									storage.set("microgear.requesttoken", JSON.stringify(self.requesttoken));
 								}
 
 								if (typeof(callback)=='function') callback(1);
@@ -2732,11 +2933,16 @@ _microgear.prototype.brokerconnect = function(callback) {
     var mqttpassword = CryptoJS.HmacSHA1(self.accesstoken.token+'%'+mqttusername, hkey).toString(CryptoJS.enc.Base64);
 	var b = self.accesstoken.endpoint.substr(6).split(':');
 
-	self.client = new Paho.MQTT.Client(b[0], Number(8083), self.accesstoken.token);
+//	self.client = new Paho.MQTT.Client(b[0], Number(8083), self.accesstoken.token);
+	var wsport;
+	if (self.securemode) wsport = GBWSSPORT;
+	else wsport = GBWSPORT;
+
+	self.client = new Paho.MQTT.Client(b[0], Number(wsport), self.accesstoken.token);
 	self.client.onConnectionLost = _onConnectionLost;
 	self.client.onMessageArrived = _onMessageArrived;
 	self.client.onError = _onError;
-	self.client.connect({userName: mqttusername,password: mqttpassword, onSuccess:_onConnect});
+	self.client.connect({userName: mqttusername,password: mqttpassword, useSSL: self.securemode, onSuccess:_onConnect});
 }
 
 function initiateconnection(done) {
@@ -2806,9 +3012,9 @@ function _onError(err) {
 		if (validateLocalStorage()) {
 			self.requesttoken = {};
 			self.accesstoken = {};
-			localStorage.setItem("microgear.key", "");
-			localStorage.setItem("microgear.accesstoken", JSON.stringify({}));
-			localStorage.setItem("microgear.requesttoken", JSON.stringify({}));
+			storage.set("microgear.key", "");
+			storage.set("microgear.accesstoken", JSON.stringify({}));
+			storage.set("microgear.requesttoken", JSON.stringify({}));
 		}
 	}
 }
@@ -2853,6 +3059,14 @@ function monloop() {
 setInterval(monloop,MONLOOPINTERVAL);
 
 _microgear.prototype.connect = function(_appid, done) {
+	this.securemode = false;
+	this.onlinemode = true;
+	self.appid = _appid;
+	initiateconnection(done);
+}
+
+_microgear.prototype.secureconnect = function(_appid, done) {
+	this.securemode = true;
 	this.onlinemode = true;
 	self.appid = _appid;
 	initiateconnection(done);
@@ -2905,7 +3119,7 @@ _microgear.prototype.publish = function(_topic,_msg,_retained) {
 }
 
 /**
- * Deprecated
+ * Deprecated	
 */
 _microgear.prototype.setname = function(gearname) {
 	if (self.gearname) self.unsubscribe('/gearname/'+self.gearname);
@@ -2942,7 +3156,7 @@ _microgear.prototype.gettoken = function() {
 }
 
 _microgear.prototype.resettoken = function (callback) {
-	var atok = jsonparse(localStorage.getItem("microgear.accesstoken"));
+	var atok = jsonparse(storage.get("microgear.accesstoken"));
 	if (atok && atok.token && atok.revokecode) {
 		var xmlHttp = new XMLHttpRequest();
 	    xmlHttp.onreadystatechange = function() { 
@@ -2953,9 +3167,9 @@ _microgear.prototype.resettoken = function (callback) {
 	 								if (validateLocalStorage()) {
 										self.requesttoken = {};
 										self.accesstoken = {};
-										localStorage.setItem("microgear.key", "");
-										localStorage.setItem("microgear.accesstoken", JSON.stringify({}));
-										localStorage.setItem("microgear.requesttoken", JSON.stringify({}));
+										storage.set("microgear.key", "");
+										storage.set("microgear.accesstoken", JSON.stringify({}));
+										storage.set("microgear.requesttoken", JSON.stringify({}));
 									}
 								}
 								if (typeof(callback)=='function') callback();
@@ -2996,3 +3210,10 @@ _microgear.prototype.on('newListener', function(event,listener) {
 				break;
 	}
 });
+
+_microgear.prototype.secureConnect = _microgear.prototype.secureconnect;
+_microgear.prototype.setname = _microgear.prototype.setName;
+_microgear.prototype.unsetName = _microgear.prototype.unsetName;
+_microgear.prototype.setAlias = _microgear.prototype.setAlias;
+_microgear.prototype.getToken = _microgear.prototype.gettoken;
+_microgear.prototype.resetToken = _microgear.prototype.resetToken;
