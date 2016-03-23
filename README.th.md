@@ -7,8 +7,11 @@ microgear-html5 คือ client library ที่ทำหน้าที่เ
 - Firefox
 - Opera
 - Safari
+- Internet Explorer
+- Edge
 
 ## Port ที่มีการใช้งาน
+หากพบปัญหาการใช้งาน กรุณาตรวจสอบว่า port ต่อไปนี้ได้รับอนุญาตให้เข้าถึงจาก network ของคุณ
 - Normal mode : 8080 และ 8083
 - TLS Secure mode : 8081 และ 8084
 
@@ -61,6 +64,7 @@ https://raw.githubusercontent.com/netpieio/microgear-html5/master/microgear.js
 
 <div id="data">_____</div>
 ```
+
 ## การใช้งาน library
 **microgear create (config)**
 
@@ -77,13 +81,14 @@ var microgear = MicroGear.create({
     alias : "myhtml"
 });
 ```
+
 ---
 ## microgear
 **void microgear.connect (*appid*, *callback*)**
-เชื่อมต่อไปที่ NETPIE โดยระบุ APPID เป้าหมาย
+เชื่อมต่อไปที่ NETPIE โดยระบุ *appid* เป้าหมาย
 
 **arguments**
-* *appid* `string` - คือกลุ่มของ application ที่ microgear จะทำการเชื่อมต่อ 
+* *appid* `string` - คือ application ที่ microgear จะทำการเชื่อมต่อ 
 ```js
 microgear.connect("happyfarm");
 ```
