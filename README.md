@@ -155,7 +155,7 @@ microgear.subscribe("/outdoor/temp");
 microgear.unsubscribe("/outdoor/temp");
 ```
 ---
-**void microgear.resettoken (callback)**
+**void microgear.resetToken (callback)**
 send a revoke token control message to NETPIE and delete the token from cache. As a result, the microgear will need to request a new token for the next connection.
 
 **arguments**
