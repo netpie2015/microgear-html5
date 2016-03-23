@@ -3212,8 +3212,8 @@ _microgear.prototype.on('newListener', function(event,listener) {
 });
 
 _microgear.prototype.secureConnect = _microgear.prototype.secureconnect;
-_microgear.prototype.setname = _microgear.prototype.setName;
-_microgear.prototype.unsetName = _microgear.prototype.unsetName;
-_microgear.prototype.setAlias = _microgear.prototype.setAlias;
+_microgear.prototype.setName = _microgear.prototype.setname;
+_microgear.prototype.unsetName = _microgear.prototype.unsetname;
+_microgear.prototype.setAlias = _microgear.prototype.setalias;
 _microgear.prototype.getToken = _microgear.prototype.gettoken;
-_microgear.prototype.resetToken = _microgear.prototype.resetToken;
+_microgear.prototype.resetToken = _microgear.prototype.resettoken;
