@@ -58,7 +58,7 @@ Usage Example
 		console.log(event);
 	});
 
-	microgear.connect(APPID);	/* or microgear.secureConnect(APPID) */
+	microgear.connect(APPID);
 </script>
 
 <div id="data">_____</div>
@@ -91,15 +91,6 @@ Connect to NETPIE with the *appid* as a target.
 * *appid* `string` - an application that microgear will connect to.
 ```js
 microgear.connect("happyfarm");
-```
----
-**void microgear.secureConnect (*appid*, *callback*)**
-Connet to NETPIE through a TLS encrypted channel. This is a desirable mode especially if you host a HTML file on a secured webserver.
-
-**arguments**
-* *appid* `string` - an application that microgear will connect t 
-```js
-microgear.secureConnect("happyfarm");
 ```
 ---
 **void microgear.setAlias(*gearalias*)**
