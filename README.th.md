@@ -59,7 +59,7 @@ https://raw.githubusercontent.com/netpieio/microgear-html5/master/microgear.js
 		console.log(event);
 	});
 
-	microgear.connect(APPID);	/* or microgear.secureConnect(APPID) */
+	microgear.connect(APPID);
 </script>
 
 <div id="data">_____</div>
@@ -91,15 +91,6 @@ var microgear = MicroGear.create({
 * *appid* `string` - คือ application ที่ microgear จะทำการเชื่อมต่อ 
 ```js
 microgear.connect("happyfarm");
-```
----
-**void microgear.secureConnect (*appid*, *callback*)**
-เชื่อมต่อไปที่ NETPIE แบบมีการเข้ารหัส ไม่สามารถดักฟังได้ แนะนำให้ใช้ฟังก์ชั่นนี้โดยเฉพาะเวลานำไฟล์ HTML ไปวางบน webserver ที่โหลดผ่านโปรโตคอล HTTPS ไม่เช่นนั้น browser อาจจะแสดงข้อความเตือนเกี่ยวกับ security หรืออาจจะเชื่อมต่อไม่ได้เลย
-
-**arguments**
-* *appid* `string` - คือกลุ่มของ application ที่ microgear จะทำการเชื่อมต่อ 
-```js
-microgear.secureConnect("happyfarm");
 ```
 ---
 **void microgear.setAlias(*gearalias*)**
