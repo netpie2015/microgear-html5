@@ -1,13 +1,16 @@
 <script src="../microgear.js"></script>
 
 <script>
-	const APPKEY = <APPKEY>;
-	const APPSECRET = <APPSECRET>;
 	const APPID = <APPID>;
+	const KEY = <KEY>;
+	const SECRET = <SECRET>;
+
+	const ALIAS = "htmlgear";
 
 	var microgear = Microgear.create({
-		gearkey: APPKEY,
-		gearsecret: APPSECRET
+		key: KEY,
+		secret: SECRET,
+		alias : ALIAS
 	});
 
 	microgear.on('message',function(topic,msg) {
@@ -15,7 +18,7 @@
 	});
 
 	microgear.on('connected', function() {
-		microgear.setname('htmlgear');
+		microgear.setAlias(ALIAS);
 		document.getElementById("data").innerHTML = "Now I am connected with netpie...";
 		setInterval(function() {
 			microgear.chat("htmlgear","Hello from myself at "+Date.now());
