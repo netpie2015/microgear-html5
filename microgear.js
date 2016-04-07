@@ -18,12 +18,15 @@
 
 /**
  * General API Endpoint
+ * Microgear-HTML5 communicates over TLS by default
+ * If you want to disable TLS, set USETLS to false
  */
 const GEARAPIADDRESS = 'ga.netpie.io';
 const GEARAPIPORT = '8080';
 const GEARAPISECUREPORT = '8081';
 const GBWSPORT = '8083';
 const GBWSSPORT = '8084';
+const USETLS = true;
 
 /**
  * Microgear API version
@@ -47,7 +50,7 @@ var toktime = MINTOKDELAYTIME;
 var gearauthurl;
 
 var _microgear = function(gearkey,gearsecret,gearalias) {
-	this.securemode = false;
+	this.securemode = USETLS;
 	this.gearkey = gearkey;
 	this.gearsecret = gearsecret;
     this.gearalias = gearalias?gearalias.substring(0,16):null;
@@ -3059,14 +3062,6 @@ function monloop() {
 setInterval(monloop,MONLOOPINTERVAL);
 
 _microgear.prototype.connect = function(_appid, done) {
-	this.securemode = false;
-	this.onlinemode = true;
-	self.appid = _appid;
-	initiateconnection(done);
-}
-
-_microgear.prototype.secureconnect = function(_appid, done) {
-	this.securemode = true;
 	this.onlinemode = true;
 	self.appid = _appid;
 	initiateconnection(done);
@@ -3211,9 +3206,13 @@ _microgear.prototype.on('newListener', function(event,listener) {
 	}
 });
 
-_microgear.prototype.secureConnect = _microgear.prototype.secureconnect;
+_microgear.prototype.usetls = function(tls) {
+	self.securemode = tls;
+}
+
 _microgear.prototype.setName = _microgear.prototype.setname;
 _microgear.prototype.unsetName = _microgear.prototype.unsetname;
 _microgear.prototype.setAlias = _microgear.prototype.setalias;
 _microgear.prototype.getToken = _microgear.prototype.gettoken;
 _microgear.prototype.resetToken = _microgear.prototype.resettoken;
+_microgear.prototype.useTLS = _microgear.prototype.usetls;
