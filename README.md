@@ -11,8 +11,8 @@ microgear-html5 is a JavaScript library that will transform any browser into a N
 
 ## Outgoing Network Port
 Make sure ther following ports are allowed to connect from your network.
-- Normal mode : 8080 and 8083
-- TLS Secure mode : 8081 and 8084
+- TLS mode : 8081 and 8084 (HTML5 microgear use this mode by default)
+- Non-TLS mode : 8080 and 8083
 
 ## Installation
 
@@ -162,6 +162,17 @@ Since the function resetToken() is asynchronous, to connect application after to
 microgear.resetToken(function(result){
     microgear.connect(APPID);
 });
+```
+
+---
+**void microgear.useTLS (tlsmode)**
+Enable or disable TLS. For HTML5 microgear, TLS is enabled by default.
+
+**arguments**
+* *tlsmode* `boolean` - The default is true (use TLS).
+
+```js
+microgear.useTLS(false);
 ```
 
 ---
