@@ -12,8 +12,8 @@ microgear-html5 คือ client library ที่ทำหน้าที่เ
 
 ## Port ที่มีการใช้งาน
 หากพบปัญหาการใช้งาน กรุณาตรวจสอบว่า port ต่อไปนี้ได้รับอนุญาตให้เข้าถึงจาก network ของคุณ
-- Normal mode : 8080 และ 8083
-- TLS Secure mode : 8081 และ 8084
+- TLS mode : 8081 and 8084 (โดยปกติ HTML5 microgear จะใช้โหมดนี้เป็น default)
+- Non-TLS mode : 8080 and 8083
 
 ## การติดตั้ง
 
@@ -161,7 +161,16 @@ microgear.resetToken(function(result){
     microgear.connect(APPID);
 });
 ```
+---
+**void microgear.useTLS (tlsmode)**
+Enable หรือ disable TLS. สำหรับ HTML5 microgear จะใช้ TLS เป็นค่า default
 
+**arguments**
+* *tlsmode* `boolean` - เป็น true หมายถึงใช้ TLS (เป็นค่า default), false หมายถึงไม่ใช้ TLS
+
+```js
+microgear.useTLS(false);
+```
 
 ---
 ## Events
