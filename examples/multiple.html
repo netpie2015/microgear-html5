@@ -1,0 +1,49 @@
+<script src="../microgear.js"></script>
+
+<script>
+
+	const APPID = <APPID>;
+	const KEY = <KEY>;
+	const SECRET = <SECRET>;
+
+	/* microgear mg1 */
+	var mg1 = Microgear.create({
+		key: KEY,
+		secret: SECRET,
+		alias : "mg1"
+	});
+
+	mg1.on('message',function(topic,msg) {
+		document.getElementById("data").innerHTML += "mg1 receives : \""+msg+"\"<br>";
+	});
+
+	mg1.on('connected', function() {
+		document.getElementById("data").innerHTML += "Now mg1 is connected with netpie...<br>";
+		setInterval(function() {
+			mg1.chat("mg2","Hello from mg1 at "+Date.now());
+		},1000);
+	});
+
+	/* microgear mg2 */
+	var mg2 = Microgear.create({
+		key: KEY,
+		secret: SECRET,
+		alias : "mg2"
+	});
+
+	mg2.on('message',function(topic,msg) {
+		document.getElementById("data").innerHTML += "mg2 receives : \""+msg+"\"<br>";
+	});
+
+	mg2.on('connected', function() {
+		document.getElementById("data").innerHTML += "Now mg2 is connected with netpie...<br>";
+		setInterval(function() {
+			mg2.chat("mg1","Hello from mg2 at "+Date.now());
+		},1000);
+	});
+
+	mg1.connect(APPID);
+	mg2.connect(APPID);
+</script>
+
+<div id="data"></div>
