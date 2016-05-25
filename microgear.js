@@ -36,7 +36,6 @@ const MGREV = 'WJS1b';
 /**
  * Constants
  */
-const TOKENCACHEFILENAME = 'microgear.cache';
 const MINTOKDELAYTIME = 100;
 const MAXTOKDELAYTIME = 30000;
 const DEBUGMODE = false;
@@ -2792,11 +2791,11 @@ Microgear.create = function(param) {
 		});
 
 		if (validateLocalStorage() && (!self.accesstoken || !self.accesstoken.token)) {
-			var skey = storage.get("microgear.key");
+			var skey = storage.get("microgear."+self.gearkey+".key");
 			if (skey && skey!=self.gearkey) {
 				self.resettoken();
 			}
-			self.accesstoken = jsonparse(storage.get("microgear.accesstoken"));
+			self.accesstoken = jsonparse(storage.get("microgear."+self.gearkey+".accesstoken"));
 		}
 
 		if (self.accesstoken && self.accesstoken.token && self.accesstoken.secret && self.accesstoken.endpoint) {
@@ -2809,11 +2808,11 @@ Microgear.create = function(param) {
 			else gearauthurl = 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT;
 
 			if (!self.requesttoken && validateLocalStorage()) {
-				var skey = storage.get("microgear.key");
+				var skey = storage.get("microgear."+self.gearkey+".key");
 				if (skey && skey!=self.gearkey) {
 					self.resettoken();
 				}
-				self.requesttoken = jsonparse(storage.get("microgear.requesttoken"));
+				self.requesttoken = jsonparse(storage.get("microgear."+self.gearkey+".requesttoken"));
 			}
 			if (self.requesttoken && self.requesttoken.token && self.requesttoken.secret) {
 
@@ -2852,8 +2851,8 @@ Microgear.create = function(param) {
 
 						        	if (r.flag != 'S') {
 										if (validateLocalStorage()) {
-											storage.set("microgear.key", self.gearkey);
-											storage.set("microgear.accesstoken", JSON.stringify(self.accesstoken));
+											storage.set("microgear."+self.gearkey+".key", self.gearkey);
+											storage.set("microgear."+self.gearkey+".accesstoken", JSON.stringify(self.accesstoken));
 										}
 									}
 
@@ -2905,7 +2904,7 @@ Microgear.create = function(param) {
 						        	self.requesttoken.verifier = verifier;
 
 									if (validateLocalStorage()) {
-										storage.set("microgear.requesttoken", JSON.stringify(self.requesttoken));
+										storage.set("microgear."+self.gearkey+".requesttoken", JSON.stringify(self.requesttoken));
 									}
 
 									if (typeof(callback)=='function') callback(1);
@@ -3008,9 +3007,9 @@ Microgear.create = function(param) {
 			if (validateLocalStorage()) {
 				self.requesttoken = {};
 				self.accesstoken = {};
-				storage.set("microgear.key", "");
-				storage.set("microgear.accesstoken", JSON.stringify({}));
-				storage.set("microgear.requesttoken", JSON.stringify({}));
+				storage.set("microgear."+self.gearkey+".key", "");
+				storage.set("microgear."+self.gearkey+".accesstoken", JSON.stringify({}));
+				storage.set("microgear."+self.gearkey+".requesttoken", JSON.stringify({}));
 			}
 		}
 	}
@@ -3144,7 +3143,7 @@ Microgear.create = function(param) {
 	}
 
 	_microgear.prototype.resettoken = function (callback) {
-		var atok = jsonparse(storage.get("microgear.accesstoken"));
+		var atok = jsonparse(storage.get("microgear."+self.gearkey+".accesstoken"));
 		if (atok && atok.token && atok.revokecode) {
 			var xmlHttp = new XMLHttpRequest();
 		    xmlHttp.onreadystatechange = function() { 
@@ -3155,9 +3154,9 @@ Microgear.create = function(param) {
 		 								if (validateLocalStorage()) {
 											self.requesttoken = {};
 											self.accesstoken = {};
-											storage.set("microgear.key", "");
-											storage.set("microgear.accesstoken", JSON.stringify({}));
-											storage.set("microgear.requesttoken", JSON.stringify({}));
+											storage.set("microgear."+self.gearkey+".key", "");
+											storage.set("microgear."+self.gearkey+".accesstoken", JSON.stringify({}));
+											storage.set("microgear."+self.gearkey+".requesttoken", JSON.stringify({}));
 										}
 									}
 									if (typeof(callback)=='function') callback();
