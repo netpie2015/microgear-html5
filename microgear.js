@@ -2691,9 +2691,9 @@ if (typeof Microgear === "undefined") {
 }
 
 Microgear.create = function(param) {
-    var gkey = param.key?param.key:param.gearkey?param.gearkey:"";
-	var gsecret = param.secret?param.secret:param.gearsecret?param.gearsecret:"";
-    var galias = param.alias?param.alias:param.gearalias?param.gearalias:"";
+    var gkey = param.key || param.gearkey || "";
+	var gsecret = param.secret || param.gearsecret || "";
+    var galias = param.alias || param.gearalias || "";
 
 	if (!param) return;
 	var scope = param.scope;	
@@ -2709,7 +2709,7 @@ Microgear.create = function(param) {
 		this.subscriptions = [];
 		this.requesttoken = {};
 		this.accesstoken = {};
-	}
+	};
 
 	var bucket = {};
 	var storage = {
@@ -2721,7 +2721,7 @@ Microgear.create = function(param) {
 			if (storejs.enabled) storejs.set(key,val);
 			else bucket[key] = val;
 		}
-	}
+	};
 
 	function extract(response) {
 		var out = {};
@@ -2838,7 +2838,7 @@ Microgear.create = function(param) {
 				http.onreadystatechange = function() {//Call a function when the state changes.
 			    	if(http.readyState == 4) {
 			    		switch (http.status) {
-			    			case 200 : 
+			    			case 200 :
 						        	var r = extract(http.responseText);
 						        	self.accesstoken = {};
 									self.accesstoken.token = r.oauth_token;
@@ -2919,7 +2919,7 @@ Microgear.create = function(param) {
 				}
 			}
 		}
-	}
+	};
 
 	_microgear.prototype.brokerconnect = function(callback) {
 		var hkey = self.accesstoken.secret+'&'+self.gearsecret;
@@ -2938,7 +2938,7 @@ Microgear.create = function(param) {
 		self.client.onMessageArrived = _onMessageArrived;
 		self.client.onError = _onError;
 		self.client.connect({userName: mqttusername,password: mqttpassword, useSSL: self.securemode, onSuccess:_onConnect});
-	}
+	};
 
 	function initiateconnection(done) {
 		self.lastretryconnection = Date.now();
@@ -3057,12 +3057,13 @@ Microgear.create = function(param) {
 		this.onlinemode = true;
 		self.appid = _appid;
 		initiateconnection(done);
-	}
+	};
 
 	_microgear.prototype.disconnect = function() {
 		this.onlinemode = false;
 		self.client.disconnect();
-	}
+
+	};
 
 	_microgear.prototype.subscribe = function(topic) {
 		self.client.subscribe('/'+self.appid+topic, function(err,granted) {
@@ -3081,7 +3082,7 @@ Microgear.create = function(param) {
 				}
 			}
 		});
-	}
+	};
 
 	_microgear.prototype.unsubscribe = function(topic,callback) {
 		if (self.debugmode) {
@@ -3095,7 +3096,7 @@ Microgear.create = function(param) {
 				console.log(self.subscriptions);
 			if (typeof(callback) == 'function') callback();
 		});
-	}
+	};
 
 	_microgear.prototype.publish = function(_topic,_msg,_retained) {
 		var message = new Paho.MQTT.Message(_msg);
@@ -3103,7 +3104,7 @@ Microgear.create = function(param) {
 
 		if (_retained) message.retained = true;
 		self.client.send(message);
-	}
+	};
 
 	/**
 	 * Deprecated	
@@ -3114,14 +3115,14 @@ Microgear.create = function(param) {
 			self.gearname = gearname;
 			if (typeof(callback) == 'function') callback();
 		});
-	}
+	};
 
 	_microgear.prototype.setalias = function (gearalias, callback) {
 	    self.publish('/@setalias/'+gearalias, "", {}, function() {
 	       self.gearalias = gearalias;
 	       if (typeof(callback) == 'function') callback();
 	    });
-	}
+	};
 
 	_microgear.prototype.unsetname = function (callback) {
 		if (self.gearname != null) {
@@ -3130,17 +3131,17 @@ Microgear.create = function(param) {
 				if (typeof(callback) == 'function') callback();
 			});
 		}
-	}
+	};
 
 	_microgear.prototype.chat = function (gearname, message, callback) {
 		self.publish('/gearname/'+gearname, message, callback);
-	}
+	};
 
 	_microgear.prototype.gettoken = function() {
 		var tok = {token:self.accesstoken.token, secret:self.accesstoken.secret};
 		console.log(tok);
 		return tok;
-	}
+	};
 
 	_microgear.prototype.resettoken = function (callback) {
 		var atok = jsonparse(storage.get("microgear."+self.gearkey+".accesstoken"));
@@ -3167,7 +3168,7 @@ Microgear.create = function(param) {
 									break;
 						}
 			    }		
-			}
+			};
 
 			var revokecode = atok.revokecode.replace(/\//g,'_');
 	        var apiurl = 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/api/revoke/'+atok.token+'/'+revokecode;
@@ -3177,7 +3178,7 @@ Microgear.create = function(param) {
 		else {
 			if (typeof(callback)=='function') callback();
 		}
-	}
+	};
 
 	_microgear.prototype.on('newListener', function(event,listener) {
 		switch (event) {
@@ -3200,7 +3201,7 @@ Microgear.create = function(param) {
 
 	_microgear.prototype.usetls = function(tls) {
 		self.securemode = tls;
-	}
+	};
 
 	_microgear.prototype.setName = _microgear.prototype.setname;
 	_microgear.prototype.unsetName = _microgear.prototype.unsetname;
@@ -3218,4 +3219,4 @@ Microgear.create = function(param) {
 	else {	
 		return null;
 	}
-}
+};

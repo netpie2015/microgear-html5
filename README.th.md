@@ -20,14 +20,14 @@ microgear-html5 คือ client library ที่ทำหน้าที่เ
 ดาวน์โหลด microgear.js จาก ที่นี่
 https://raw.githubusercontent.com/netpieio/microgear-html5/master/microgear.js
 
-หรือเรียกใช้ตรงจากเว็บ netpie.io โดยใช้ tag
+หรือเรียกใช้เวอร์ชั่นล่าสุดจาก cdn โดยใช้ tag
 ```html
-<script src="https://netpie.io/microgear.js"></script>
+<script src="https://cdn.netpie.io/microgear.js"></script>
 ```
 
 ตัวอย่างการเรียกใช้
 ```js
-<script src="https://netpie.io/microgear.js"></script>
+<script src="https://cdn.netpie.io/microgear.js"></script>
 <script>
   const APPID     = <APPID>;
   const APPKEY    = <APPKEY>;
