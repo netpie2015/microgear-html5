@@ -19,9 +19,9 @@ Make sure ther following ports are allowed to connect from your network.
 Download microgear.js here
 https://raw.githubusercontent.com/netpieio/microgear-html5/master/microgear.js
 
-Or call it directly from the website netpie.io by using this tag
+Or refer to the latest version directly from the cdn using this tag
 ```html
-<script src="https://netpie.io/microgear.js"></script>
+<script src="https://cdn.netpie.io/microgear.js"></script>
 ```
 
 Usage Example
