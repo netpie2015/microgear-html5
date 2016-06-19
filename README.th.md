@@ -27,7 +27,7 @@ https://raw.githubusercontent.com/netpieio/microgear-html5/master/microgear.js
 
 ตัวอย่างการเรียกใช้
 ```js
-<script src="https://netpie.io/microgear.js"></script>
+<script src="https://cdn.netpie.io/microgear.js"></script>
 <script>
   const APPID     = <APPID>;
   const APPKEY    = <APPKEY>;

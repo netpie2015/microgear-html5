@@ -26,7 +26,7 @@ Or refer to the latest version directly from the cdn using this tag
 
 Usage Example
 ```js
-<script src="https://netpie.io/microgear.js"></script>
+<script src="https://cdn.netpie.io/microgear.js"></script>
 <script>
   const APPID     = <APPID>;
   const APPKEY    = <APPKEY>;
