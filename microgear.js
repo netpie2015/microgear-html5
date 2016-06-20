@@ -21,6 +21,7 @@
  * Microgear-HTML5 communicates over TLS by default
  * If you want to disable TLS, set USETLS to false
  */
+const VERSION = '1.0.8'; 
 const GEARAPIADDRESS = 'ga.netpie.io';
 const GEARAPIPORT = '8080';
 const GEARAPISECUREPORT = '8081';
@@ -41,6 +42,7 @@ const MAXTOKDELAYTIME = 30000;
 const DEBUGMODE = false;
 const MONLOOPINTERVAL = 1000;
 const RETRYCONNECTIONINTERVAL = 5000;
+const MESSAGEBUFFERSIZE = 20;
 
 /**
  * Variables
@@ -2699,7 +2701,6 @@ Microgear.create = function(param) {
 	var scope = param.scope;	
 	var self = null;
 
-
 	var _microgear = function(gearkey,gearsecret,gearalias) {
 		this.securemode = USETLS;
 		this.gearkey = gearkey;
@@ -2707,6 +2708,7 @@ Microgear.create = function(param) {
 	    this.gearalias = gearalias?gearalias.substring(0,16):null;
 		this.client = null;
 		this.subscriptions = [];
+		this.messageBuffer = [];
 		this.requesttoken = {};
 		this.accesstoken = {};
 	};
@@ -2974,21 +2976,14 @@ Microgear.create = function(param) {
 		});
 	}
 
-	/*
-	//For Testing
-	var mqttclientid = 'Jocqkb4c1cpkqeeY';
-	var mqttusername = 'qDDwMaHEXfBiXmL%1438184799';
-	var mqttpassword = 'Iss/3enIiaOyycyFfYTXEvi4r6w=';
-	*/
-
 	function _onConnect() {
 		for(var i=0; i<self.subscriptions.length; i++) {
 			if (self.debugmode) console.log('auto subscribe '+self.subscriptions[i]);
-			self.client.subscribe(self.subscriptions[i]);
+			self.client.subscribe('/'+self.appid+self.subscriptions[i]);
 		}
 
 		/* subscribe for control messages */
-		self.client.subscribe('/&id/'+this.clientid+'/#');
+		self.client.subscribe('/&id/'+self.clientid+'/#');
 
 		if (_microgear.prototype.listeners('present')) {
 			self.client.subscribe('/'+self.appid+'/&present');
@@ -2997,13 +2992,22 @@ Microgear.create = function(param) {
 			self.client.subscribe('/'+self.appid+'/&absent');
 		}
 
-		_microgear.prototype.emit('connected');
+		self.emit('connected');
+
+		var timer = setInterval(function() {
+			if (self.messageBuffer.length > 0) {
+			var message = self.messageBuffer.shift();
+			message.destinationName = '/'+self.appid + message.destinationName;
+			self.client.send(message);
+			}
+			else clearInterval(timer);
+		}, 200);
 	}
 
 	function _onError(err) {
 		//console.log(JSON.stringify(err));
 		if (err.code == 4) {
-			_microgear.prototype.emit('info','invalid token, requesting a new one');
+			self.emit('info','invalid token, requesting a new one');
 			if (validateLocalStorage()) {
 				self.requesttoken = {};
 				self.accesstoken = {};
@@ -3025,20 +3029,20 @@ Microgear.create = function(param) {
 			var ctop = rtop.substr(2,p);
 			switch (ctop) {
 				case 'present' :
-						_microgear.prototype.emit('present',{event:'present',gearkey:message.toString()});
+						self.emit('present',{event:'present',gearkey:message.toString()});
 						break;
 				case 'absent' :
-						_microgear.prototype.emit('absent',{event:'abesent',gearkey:message.toString()});
+						self.emit('absent',{event:'abesent',gearkey:message.toString()});
 						break;
 			}
 		}
 		else {
-			_microgear.prototype.emit('message',topic,message);
+			self.emit('message',topic,message);
 		}
 	}
 
 	function _onConnectionLost(responseObject) {
-		_microgear.prototype.emit('disconnected');
+		self.emit('disconnected');
 	}
 
 	// connection monitor loop
@@ -3066,44 +3070,60 @@ Microgear.create = function(param) {
 	};
 
 	_microgear.prototype.subscribe = function(topic) {
-		self.client.subscribe('/'+self.appid+topic, function(err,granted) {
-			if (granted && granted[0]) {
-				if (self.subscriptions.indexOf('/'+self.appid+topic)) {
-					self.subscriptions.push('/'+self.appid+topic);
-				}
-			}
-			if (typeof(callback)=='function') {
-				if (err) callback(0);
-				else {
-					if (granted && granted[0] && granted[0].qos==0||granted[0].qos==1||granted[0].qos==2) {
-						callback(1);
+		if (self.client && self.client.isConnected()) {
+			self.client.subscribe('/'+self.appid+topic,{
+				onSuccess : function(res) {
+					if (self.subscriptions.indexOf('/'+self.appid+topic) == -1) {
+						self.subscriptions.push(topic);
 					}
-					else callback(0);
+				},
+				onFailure : function(res) {
+
 				}
+			});
+		}
+		else {
+			if (self.subscriptions.indexOf('/'+self.appid+topic) == -1) {
+				self.subscriptions.push(topic);
 			}
-		});
+		}
 	};
 
-	_microgear.prototype.unsubscribe = function(topic,callback) {
-		if (self.debugmode) {
-			console.log(self.subscriptions.indexOf('/'+self.appid+topic));
-			console.log(self.subscriptions);
-		}
 
-		self.client.unsubscribe('/'+self.appid+topic, function() {
-			self.subscriptions.splice(self.subscriptions.indexOf('/'+self.appid+topic));
-			if (self.debugmode)
-				console.log(self.subscriptions);
-			if (typeof(callback) == 'function') callback();
-		});
+	_microgear.prototype.unsubscribe = function(topic,callback) {
+		if (self.client && self.client.isConnected()) {
+			self.client.unsubscribe('/'+self.appid+topic,{
+				onSuccess : function(res) {
+					if (self.subscriptions.indexOf(topic) == -1) {
+						self.subscriptions.splice(self.subscriptions.indexOf(topic));
+					}
+				},
+				onFailure : function(res) {
+
+				}
+			});
+		}
+		else {
+			if (self.subscriptions.indexOf(topic) >= 0) {
+				self.subscriptions.splice(self.subscriptions.indexOf(topic));
+			}
+		}
 	};
 
 	_microgear.prototype.publish = function(_topic,_msg,_retained) {
 		var message = new Paho.MQTT.Message(_msg);
-		message.destinationName = '/'+self.appid+_topic;
-
 		if (_retained) message.retained = true;
-		self.client.send(message);
+
+		if (self.client && self.client.isConnected()) {
+			message.destinationName = '/'+self.appid+_topic;
+			self.client.send(message);
+		}
+		else {
+			if (self.messageBuffer.length < MESSAGEBUFFERSIZE) {
+				message.destinationName = _topic;
+				self.messageBuffer.push(message);
+			}
+		}
 	};
 
 	/**
@@ -3163,7 +3183,7 @@ Microgear.create = function(param) {
 									if (typeof(callback)=='function') callback();
 									break;
 							default :
-									_microgear.prototype.emit('error','Reset token error : '+xmlHttp.responseText);
+									self.emit('error','Reset token error : '+xmlHttp.responseText);
 									if (typeof(callback)=='function') callback(xmlHttp.responseText);
 									break;
 						}
