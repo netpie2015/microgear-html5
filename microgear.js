@@ -21,7 +21,7 @@
  * Microgear-HTML5 communicates over TLS by default
  * If you want to disable TLS, set USETLS to false
  */
-const VERSION = '1.0.8'; 
+const VERSION = '1.0.9'; 
 const GEARAPIADDRESS = 'ga.netpie.io';
 const GEARAPIPORT = '8080';
 const GEARAPISECUREPORT = '8081';
@@ -2985,12 +2985,16 @@ Microgear.create = function(param) {
 		/* subscribe for control messages */
 		self.client.subscribe('/&id/'+self.clientid+'/#');
 
-		if (_microgear.prototype.listeners('present')) {
+		if (self.listeners('present')) {
 			self.client.subscribe('/'+self.appid+'/&present');
 		}
-		if (_microgear.prototype.listeners('absent')) {
+		if (self.listeners('absent')) {
 			self.client.subscribe('/'+self.appid+'/&absent');
 		}
+
+        if (self.gearalias) {
+            self.setalias(self.gearalias);
+        }
 
 		self.emit('connected');
 
@@ -3028,12 +3032,24 @@ Microgear.create = function(param) {
 			var p = (rtop.substr(1,rtop.length-1)+'/').indexOf('/');
 			var ctop = rtop.substr(2,p);
 			switch (ctop) {
-				case 'present' :
-						self.emit('present',{event:'present',gearkey:message.toString()});
-						break;
-				case 'absent' :
-						self.emit('absent',{event:'abesent',gearkey:message.toString()});
-						break;
+                case 'present' :
+                case 'absent'  :
+                            var pm;
+                            try {
+                                pm = JSON.parse(message.toString());
+                            }
+                            catch(e) {
+                                pm = message.toString();
+                            }
+                        self.emit(ctop, pm);
+                        break;
+                case 'resetendpoint' :
+	                        if (self.accesstoken && self.accesstoken.endpoint) {
+	                            self.accesstoken.endpoint = "";
+								storage.set("microgear."+self.gearkey+".accesstoken", JSON.stringify(self.accesstoken));
+	                            self.emit('info','endpoint reset');
+	                        }
+	                        break;
 			}
 		}
 		else {
