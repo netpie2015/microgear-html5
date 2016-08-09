@@ -3043,6 +3043,13 @@ Microgear.create = function(param) {
                             }
                         self.emit(ctop, pm);
                         break;
+                case 'resetendpoint' :
+	                        if (self.accesstoken && self.accesstoken.endpoint) {
+	                            self.accesstoken.endpoint = "";
+								storage.set("microgear."+self.gearkey+".accesstoken", JSON.stringify(self.accesstoken));
+	                            self.emit('info','endpoint reset');
+	                        }
+	                        break;
 			}
 		}
 		else {
