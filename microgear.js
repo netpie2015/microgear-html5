@@ -21,7 +21,7 @@
  * Microgear-HTML5 communicates over TLS by default
  * If you want to disable TLS, set USETLS to false
  */
-const VERSION = '1.0.9'; 
+const VERSION = '1.1.0'; 
 const GEARAPIADDRESS = 'ga.netpie.io';
 const GEARAPIPORT = '8080';
 const GEARAPISECUREPORT = '8081';
@@ -2862,13 +2862,16 @@ Microgear.create = function(param) {
 			    					break;
 
 							case 401:	// not authorized yet
-									alert('Error 401');
+									self.emit('error',{code:401, message:"Not authorized"});
 									if (callback) callback(1);
 									break;
 							case 500:	// eg. 500 request token not found
+									self.emit('error',{status:500, message:"Request token invalid"});
+									if (typeof(callback)=='function') callback(0);
+			    					break;
 
 			    			default :
-						        	alert('oauth request error --> '+http.responseText);
+									self.emit('error',{status:503, message:"Cannot obtain a token"});
 									if (typeof(callback)=='function') callback(0);
 			    					break;
 			    		}
@@ -2913,7 +2916,7 @@ Microgear.create = function(param) {
 			    					break;
 
 			    			default :
-						        	alert('oauth request error --> '+http.responseText);
+									self.emit('error',{status:503, message:"Cannot obtain a token"});
 									if (typeof(callback)=='function') callback(0);
 			    					break;
 			    		}
@@ -3052,6 +3055,14 @@ Microgear.create = function(param) {
 	                        break;
 			}
 		}
+		else if (topic.substr(0,1)=='@') {
+			switch (topic) {
+				case '@info' : 	self.emit('info',message);
+								break;
+				case '@error' : self.emit('error',message);
+								break;
+			}
+		}
 		else {
 			self.emit('message',topic,message);
 		}
@@ -3169,6 +3180,13 @@ Microgear.create = function(param) {
 		}
 	};
 
+	_microgear.prototype.writefeed = function (feedid, datajson, apikey) {
+		var cmd = '/@writefeed/'+feedid;
+		if (apikey) cmd += '/'+apikey;
+		if (typeof(datajson) == 'object') datajson = JSON.stringify(datajson);
+	    self.publish(cmd,datajson);
+	};
+
 	_microgear.prototype.chat = function (gearname, message, callback) {
 		self.publish('/gearname/'+gearname, message, callback);
 	};
@@ -3242,6 +3260,7 @@ Microgear.create = function(param) {
 	_microgear.prototype.setName = _microgear.prototype.setname;
 	_microgear.prototype.unsetName = _microgear.prototype.unsetname;
 	_microgear.prototype.setAlias = _microgear.prototype.setalias;
+	_microgear.prototype.writeFeed = _microgear.prototype.writefeed;
 	_microgear.prototype.getToken = _microgear.prototype.gettoken;
 	_microgear.prototype.resetToken = _microgear.prototype.resettoken;
 	_microgear.prototype.useTLS = _microgear.prototype.usetls;
