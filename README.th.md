@@ -144,6 +144,18 @@ microgear.subscribe("/outdoor/temp");
 microgear.unsubscribe("/outdoor/temp");
 ```
 ---
+**void microgear.writeFeed (*feedid*, *datajson* [, *apikey*])**
+เขียนข้อมูลลง feed storage
+
+**arguments**
+* *feedid* `string` - ชื่อของ feed ที่ต้องการจะเขียนข้อมูล 
+* *datajson* `string` - ข้อมูลที่จะบันทึก ในรูปแบบ json 
+* *apikey* `string` - apikey สำหรับตรวจสอบสิทธิ์ หากไม่กำหนด จะใช้ default apikey ของ feed ที่ให้สิทธิ์ไว้กับ AppID
+
+```js
+microgear.writeFeed("homesensor",{temp:25.7,humid:62.8,light:8.5});
+```
+---
 **void microgear.resetToken (callback)**
 ออนไลน์ส่งคำสั่ง revoke token และลบ token ออกจาก cache ส่งผลให้ microgear ต้องขอ token ใหม่ในการเชื่อมต่อครั้งต่อไป
 
