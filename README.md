@@ -146,6 +146,18 @@ microgear.subscribe("/outdoor/temp");
 microgear.unsubscribe("/outdoor/temp");
 ```
 ---
+**void microgear.writeFeed (*feedid*, *datajson* [, *apikey*])**
+write time series data to a feed storage
+
+**arguments**
+* *feedid* `string` - name of the feed 
+* *datajson* `string` - data in json format 
+* *apikey* `string` - apikey for authorization. If apikey is not specified, you will need to allow the AppID to access feed and then the default apikey will be assigned automatically.
+
+```js
+microgear.writeFeed("homesensor",{temp:25.7,humid:62.8,light:8.5});
+```
+---
 **void microgear.resetToken (callback)**
 send a revoke token control message to NETPIE and delete the token from cache. As a result, the microgear will need to request a new token for the next connection.
 
