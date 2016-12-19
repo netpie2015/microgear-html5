@@ -843,6 +843,9 @@ Paho.MQTT = (function (global) {
 	};
 
 	ClientImpl.prototype.subscribe = function (filter, subscribeOptions) {
+
+console.log('@@@ sub +++++ '+filter+' +++++++++ ');
+
 		this._trace("Client.subscribe", filter, subscribeOptions);
 			  
 		if (!this.connected)
@@ -2999,6 +3002,9 @@ Microgear.create = function(param) {
             self.setalias(self.gearalias);
         }
 
+console.log('@@@ sub list ---> ');
+console.dir(self.subscriptions);
+
 		self.emit('connected');
 
 		var timer = setInterval(function() {
@@ -3098,30 +3104,32 @@ Microgear.create = function(param) {
 
 	_microgear.prototype.subscribe = function(topic) {
 		if (self.client && self.client.isConnected()) {
-			self.client.subscribe('/'+self.appid+topic,{
-				onSuccess : function(res) {
-					if (self.subscriptions.indexOf('/'+self.appid+topic) == -1) {
-						self.subscriptions.push(topic);
-					}
-				},
-				onFailure : function(res) {
+			if (self.subscriptions.indexOf(topic) < 0) {
+				self.client.subscribe('/'+self.appid+topic,{
+					onSuccess : function(res) {
+						if (self.subscriptions.indexOf(topic) < 0) {
+							self.subscriptions.push(topic);
+						}
+					},
+					onFailure : function(res) {
 
-				}
-			});
+					}
+				});
+
+			}	
 		}
 		else {
-			if (self.subscriptions.indexOf('/'+self.appid+topic) == -1) {
+			if (self.subscriptions.indexOf(topic) < 0) {
 				self.subscriptions.push(topic);
 			}
 		}
 	};
 
-
 	_microgear.prototype.unsubscribe = function(topic,callback) {
 		if (self.client && self.client.isConnected()) {
 			self.client.unsubscribe('/'+self.appid+topic,{
 				onSuccess : function(res) {
-					if (self.subscriptions.indexOf(topic) == -1) {
+					if (self.subscriptions.indexOf(topic) < 0) {
 						self.subscriptions.splice(self.subscriptions.indexOf(topic));
 					}
 				},
