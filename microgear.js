@@ -3035,6 +3035,7 @@ Microgear.create = function(param) {
 			var p = (rtop.substr(1,rtop.length-1)+'/').indexOf('/');
 			var ctop = rtop.substr(2,p);
 			switch (ctop) {
+<<<<<<< HEAD
                 case 'present' :
                 case 'absent'  :
                             var pm;
@@ -3061,6 +3062,14 @@ Microgear.create = function(param) {
 								break;
 				case '@error' : self.emit('error',message);
 								break;
+=======
+				case 'present' :
+						self.emit('present',{event:'present',gearkey:message.toString()});
+						break;
+				case 'absent' :
+						self.emit('absent',{event:'abesent',gearkey:message.toString()});
+						break;
+>>>>>>> master
 			}
 		}
 		else {
