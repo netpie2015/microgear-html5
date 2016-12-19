@@ -21,7 +21,7 @@
  * Microgear-HTML5 communicates over TLS by default
  * If you want to disable TLS, set USETLS to false
  */
-const VERSION = '1.1.1'; 
+const VERSION = '1.1.2'; 
 const GEARAPIADDRESS = 'ga.netpie.io';
 const GEARAPIPORT = '8080';
 const GEARAPISECUREPORT = '8081';
@@ -843,9 +843,6 @@ Paho.MQTT = (function (global) {
 	};
 
 	ClientImpl.prototype.subscribe = function (filter, subscribeOptions) {
-
-console.log('@@@ sub +++++ '+filter+' +++++++++ ');
-
 		this._trace("Client.subscribe", filter, subscribeOptions);
 			  
 		if (!this.connected)
@@ -3001,9 +2998,6 @@ Microgear.create = function(param) {
         if (self.gearalias) {
             self.setalias(self.gearalias);
         }
-
-console.log('@@@ sub list ---> ');
-console.dir(self.subscriptions);
 
 		self.emit('connected');
 
