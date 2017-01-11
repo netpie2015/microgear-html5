@@ -107,7 +107,7 @@ microgear.setAlias("plant");
 
 **arguments**
 * *gearalias* `string` - ชื่อของ microgear ที่ต้องการจะส่งข้อความไปถึง 
-* *message* `string` - ข้อความ
+* *message* `string|number|object` - ข้อความ
 
 ```js
 microgear.chat("valve","I need water");
@@ -118,7 +118,7 @@ microgear.chat("valve","I need water");
 
 **arguments**
 * *topic* `string` - ชื่อของ topic ที่ต้องการจะส่งข้อความไปถึง 
-* *message* `string` - ข้อความ
+* *message* `string|number|object` - ข้อความ
 
 ```js
 microgear.publish("/outdoor/temp","28.5");
