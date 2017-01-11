@@ -107,7 +107,7 @@ microgear.setAlias("plant");
 
 **arguments**
 * *gearname* `string` - name of microgear to which to send a message. 
-* *message* `string` - message to be sent.
+* *message* `string|number|object` - message to be sent.
 
 ```js
 microgear.chat("valve","I need water");
@@ -118,7 +118,7 @@ In the case that the microgear want to send a message to an unspecified receiver
 
 **arguments**
 * *topic* `string` - name of topic to be send a message to. 
-* *message* `string` - message to be sent.
+* *message* `string|number|object` - message to be sent.
 * *retained* `boolean` - retain a message or not (the default is `false`)
 
 
