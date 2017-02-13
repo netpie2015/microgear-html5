@@ -3268,6 +3268,13 @@ Microgear.create = function(param) {
 		self.securemode = tls;
 	};
 
+	_microgear.prototype.connected = function() {
+		if (self.client) {
+			return self.client.isConnected();
+		}
+		else return false;
+	}
+
 	_microgear.prototype.setName = _microgear.prototype.setname;
 	_microgear.prototype.unsetName = _microgear.prototype.unsetname;
 	_microgear.prototype.setAlias = _microgear.prototype.setalias;
