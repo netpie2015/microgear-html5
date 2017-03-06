@@ -22,7 +22,7 @@
  * If you want to disable TLS, set USETLS to false
  */
 const VERSION = '1.1.4';
-const GEARAPIADDRESS = 'ga.netpie.io';
+const GEARAPIADDRESS = 'pct.netpie.io';
 const GEARAPIPORT = '8080';
 const GEARAPISECUREPORT = '8081';
 const GBWSPORT = '8083';
