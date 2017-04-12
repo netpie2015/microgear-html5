@@ -21,7 +21,7 @@
  * Microgear-HTML5 communicates over TLS by default
  * If you want to disable TLS, set USETLS to false
  */
-const VERSION = '1.1.5';
+const VERSION = '1.1.6';
 const GEARAPIADDRESS = 'ga.netpie.io';
 const GEARAPIPORT = '8080';
 const GEARAPISECUREPORT = '8081';
@@ -48,6 +48,7 @@ const MESSAGEBUFFERSIZE = 20;
  * Variables
  */
 var toktime = MINTOKDELAYTIME;
+var GEARAUTH = GEARAPIADDRESS;
 
 /*******************************************************************************
  * Copyright (c) 2013 IBM Corp.
@@ -2806,8 +2807,8 @@ Microgear.create = function(param) {
 		else {
 			var gearauthurl;
 
-			if (self.securemode) gearauthurl = 'https://'+GEARAPIADDRESS+':'+GEARAPISECUREPORT;
-			else gearauthurl = 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT;
+			if (self.securemode) gearauthurl = 'https://'+GEARAUTH+':'+GEARAPISECUREPORT;
+			else gearauthurl = 'http://'+GEARAUTH+':'+GEARAPIPORT;
 
 			if (!self.requesttoken && validateLocalStorage()) {
 				var skey = storage.get("microgear."+self.gearkey+".key");
@@ -3236,7 +3237,7 @@ Microgear.create = function(param) {
 			};
 
 			var revokecode = atok.revokecode.replace(/\//g,'_');
-	        var apiurl = 'http://'+GEARAPIADDRESS+':'+GEARAPIPORT+'/api/revoke/'+atok.token+'/'+revokecode;
+	        var apiurl = 'http://'+GEARAUTH+':'+GEARAPIPORT+'/api/revoke/'+atok.token+'/'+revokecode;
 			xmlHttp.open("GET", apiurl, true); //true for asynchronous 
 	    	xmlHttp.send(null);
 		}
@@ -3275,6 +3276,20 @@ Microgear.create = function(param) {
 		else return false;
 	}
 
+	_microgear.prototype.setconfig = function(key,value) {
+		switch(key) {
+			case 'GEARAUTH' : 	GEARAUTH = value.toString();
+								break;
+		}
+	}
+
+	_microgear.prototype.getconfig = function(key) {
+		switch(key) {
+			case 'GEARAUTH' : 	return GEARAUTH;
+								break;
+		}
+	}
+
 	_microgear.prototype.setName = _microgear.prototype.setname;
 	_microgear.prototype.unsetName = _microgear.prototype.unsetname;
 	_microgear.prototype.setAlias = _microgear.prototype.setalias;
@@ -3282,6 +3297,8 @@ Microgear.create = function(param) {
 	_microgear.prototype.getToken = _microgear.prototype.gettoken;
 	_microgear.prototype.resetToken = _microgear.prototype.resettoken;
 	_microgear.prototype.useTLS = _microgear.prototype.usetls;
+	_microgear.prototype.setConfig = _microgear.prototype.setconfig;
+	_microgear.prototype.getConfig = _microgear.prototype.getconfig;
 
 	if (gkey && gsecret) {
 		var mg = new _microgear(gkey,gsecret,galias);
