@@ -21,7 +21,7 @@
  * Microgear-HTML5 communicates over TLS by default
  * If you want to disable TLS, set USETLS to false
  */
-const VERSION = '1.1.6';
+const VERSION = '1.1.7';
 const GEARAPIADDRESS = 'ga.netpie.io';
 const GEARAPIPORT = '8080';
 const GEARAPISECUREPORT = '8081';
@@ -49,6 +49,208 @@ const MESSAGEBUFFERSIZE = 20;
  */
 var toktime = MINTOKDELAYTIME;
 var GEARAUTH = GEARAPIADDRESS;
+
+/*
+Store.js
+Copyright (c) 2010-2016 Marcus Westin
+Source: https://github.com/marcuswestin/store.js
+*/
+var storejs = (function() {
+	var store = {},
+		win = (typeof window != 'undefined' ? window : global),
+		doc = win.document,
+		localStorageName = 'localStorage',
+		scriptTag = 'script',
+		storage
+
+	store.disabled = false
+	store.version = '1.3.20'
+	store.set = function(key, value) {}
+	store.get = function(key, defaultVal) {}
+	store.has = function(key) { return store.get(key) !== undefined }
+	store.remove = function(key) {}
+	store.clear = function() {}
+	store.transact = function(key, defaultVal, transactionFn) {
+		if (transactionFn == null) {
+			transactionFn = defaultVal
+			defaultVal = null
+		}
+		if (defaultVal == null) {
+			defaultVal = {}
+		}
+		var val = store.get(key, defaultVal)
+		transactionFn(val)
+		store.set(key, val)
+	}
+	store.getAll = function() {}
+	store.forEach = function() {}
+
+	store.serialize = function(value) {
+		return JSON.stringify(value)
+	}
+	store.deserialize = function(value) {
+		if (typeof value != 'string') { return undefined }
+		try { return JSON.parse(value) }
+		catch(e) { return value || undefined }
+	}
+
+	// Functions to encapsulate questionable FireFox 3.6.13 behavior
+	// when about.config::dom.storage.enabled === false
+	// See https://github.com/marcuswestin/store.js/issues#issue/13
+	function isLocalStorageNameSupported() {
+		try { return (localStorageName in win && win[localStorageName]) }
+		catch(err) { return false }
+	}
+
+	if (isLocalStorageNameSupported()) {
+		storage = win[localStorageName]
+		store.set = function(key, val) {
+			if (val === undefined) { return store.remove(key) }
+			storage.setItem(key, store.serialize(val))
+			return val
+		}
+		store.get = function(key, defaultVal) {
+			var val = store.deserialize(storage.getItem(key))
+			return (val === undefined ? defaultVal : val)
+		}
+		store.remove = function(key) { storage.removeItem(key) }
+		store.clear = function() { storage.clear() }
+		store.getAll = function() {
+			var ret = {}
+			store.forEach(function(key, val) {
+				ret[key] = val
+			})
+			return ret
+		}
+		store.forEach = function(callback) {
+			for (var i=0; i<storage.length; i++) {
+				var key = storage.key(i)
+				callback(key, store.get(key))
+			}
+		}
+	} else if (doc && doc.documentElement.addBehavior) {
+		var storageOwner,
+			storageContainer
+		// Since #userData storage applies only to specific paths, we need to
+		// somehow link our data to a specific path.  We choose /favicon.ico
+		// as a pretty safe option, since all browsers already make a request to
+		// this URL anyway and being a 404 will not hurt us here.  We wrap an
+		// iframe pointing to the favicon in an ActiveXObject(htmlfile) object
+		// (see: http://msdn.microsoft.com/en-us/library/aa752574(v=VS.85).aspx)
+		// since the iframe access rules appear to allow direct access and
+		// manipulation of the document element, even for a 404 page.  This
+		// document can be used instead of the current document (which would
+		// have been limited to the current path) to perform #userData storage.
+		try {
+			storageContainer = new ActiveXObject('htmlfile')
+			storageContainer.open()
+			storageContainer.write('<'+scriptTag+'>document.w=window</'+scriptTag+'><iframe src="/favicon.ico"></iframe>')
+			storageContainer.close()
+			storageOwner = storageContainer.w.frames[0].document
+			storage = storageOwner.createElement('div')
+		} catch(e) {
+			// somehow ActiveXObject instantiation failed (perhaps some special
+			// security settings or otherwse), fall back to per-path storage
+			storage = doc.createElement('div')
+			storageOwner = doc.body
+		}
+		var withIEStorage = function(storeFunction) {
+			return function() {
+				var args = Array.prototype.slice.call(arguments, 0)
+				args.unshift(storage)
+				// See http://msdn.microsoft.com/en-us/library/ms531081(v=VS.85).aspx
+				// and http://msdn.microsoft.com/en-us/library/ms531424(v=VS.85).aspx
+				storageOwner.appendChild(storage)
+				storage.addBehavior('#default#userData')
+				storage.load(localStorageName)
+				var result = storeFunction.apply(store, args)
+				storageOwner.removeChild(storage)
+				return result
+			}
+		}
+
+		// In IE7, keys cannot start with a digit or contain certain chars.
+		// See https://github.com/marcuswestin/store.js/issues/40
+		// See https://github.com/marcuswestin/store.js/issues/83
+		var forbiddenCharsRegex = new RegExp("[!\"#$%&'()*+,/\\\\:;<=>?@[\\]^`{|}~]", "g")
+		var ieKeyFix = function(key) {
+			return key.replace(/^d/, '___$&').replace(forbiddenCharsRegex, '___')
+		}
+		store.set = withIEStorage(function(storage, key, val) {
+			key = ieKeyFix(key)
+			if (val === undefined) { return store.remove(key) }
+			storage.setAttribute(key, store.serialize(val))
+			storage.save(localStorageName)
+			return val
+		})
+		store.get = withIEStorage(function(storage, key, defaultVal) {
+			key = ieKeyFix(key)
+			var val = store.deserialize(storage.getAttribute(key))
+			return (val === undefined ? defaultVal : val)
+		})
+		store.remove = withIEStorage(function(storage, key) {
+			key = ieKeyFix(key)
+			storage.removeAttribute(key)
+			storage.save(localStorageName)
+		})
+		store.clear = withIEStorage(function(storage) {
+			var attributes = storage.XMLDocument.documentElement.attributes
+			storage.load(localStorageName)
+			for (var i=attributes.length-1; i>=0; i--) {
+				storage.removeAttribute(attributes[i].name)
+			}
+			storage.save(localStorageName)
+		})
+		store.getAll = function(storage) {
+			var ret = {}
+			store.forEach(function(key, val) {
+				ret[key] = val
+			})
+			return ret
+		}
+		store.forEach = withIEStorage(function(storage, callback) {
+			var attributes = storage.XMLDocument.documentElement.attributes
+			for (var i=0, attr; attr=attributes[i]; ++i) {
+				callback(attr.name, store.deserialize(storage.getAttribute(attr.name)))
+			}
+		})
+	}
+
+	try {
+		var testKey = '__storejs__'
+		store.set(testKey, testKey)
+		if (store.get(testKey) != testKey) { store.disabled = true }
+		store.remove(testKey)
+	} catch(e) {
+		store.disabled = true
+	}
+	store.enabled = !store.disabled
+	
+	return store
+}());
+
+console.log(storejs.enabled);
+
+var _localStorage = {
+	setItem : function(key, value) {
+		if (storejs.enabled) {
+			storejs.set(key, value);
+		}
+	},
+	getItem : function() {
+		if (storejs.enabled) {
+			return storejs.get(key);
+		}
+	},
+	removeItem : function() {
+		if (storejs.enabled) {
+			storejs.remove(key);
+		}
+	},
+	getAllItems : function() {
+		return storejs.getAll();
+	}
+}
 
 /*******************************************************************************
  * Copyright (c) 2013 IBM Corp.
@@ -738,9 +940,11 @@ Paho.MQTT = (function (global) {
 		if (!("WebSocket" in global && global["WebSocket"] !== null)) {
 			throw new Error(format(ERROR.UNSUPPORTED, ["WebSocket"]));
 		}
+/*
 		if (!("localStorage" in global && global["localStorage"] !== null)) {
 			throw new Error(format(ERROR.UNSUPPORTED, ["localStorage"]));
 		}
+*/
 		if (!("ArrayBuffer" in global && global["ArrayBuffer"] !== null)) {
 			throw new Error(format(ERROR.UNSUPPORTED, ["ArrayBuffer"]));
 		}
@@ -783,7 +987,7 @@ Paho.MQTT = (function (global) {
 		
 
 		// Load the local state, if any, from the saved version, only restore state relevant to this client.   	
-		for (var key in localStorage)
+		for (var key in _localStorage.getItems)
 			if (   key.indexOf("Sent:"+this._localKey) == 0  		    
 				|| key.indexOf("Received:"+this._localKey) == 0)
 			this.restore(key);
@@ -1035,11 +1239,11 @@ Paho.MQTT = (function (global) {
 			default:
 				throw Error(format(ERROR.INVALID_STORED_DATA, [key, storedMessage]));
 		}
-		storage.set(prefix+this._localKey+wireMessage.messageIdentifier, JSON.stringify(storedMessage));
+		_localStorage.setItem(prefix+this._localKey+wireMessage.messageIdentifier, JSON.stringify(storedMessage));
 	};
 	
 	ClientImpl.prototype.restore = function(key) {    	
-		var value = storage.get(key);
+		var value = _localStorage.getItem(key);
 		var storedMessage = JSON.parse(value);
 		
 		var wireMessage = new WireMessage(storedMessage.type, storedMessage);
@@ -1189,13 +1393,13 @@ Paho.MQTT = (function (global) {
 				if (this.connectOptions.cleanSession) {
 					for (var key in this._sentMessages) {	    		
 						var sentMessage = this._sentMessages[key];
-						localStorage.removeItem("Sent:"+this._localKey+sentMessage.messageIdentifier);
+						_localStorage.removeItem("Sent:"+this._localKey+sentMessage.messageIdentifier);
 					}
 					this._sentMessages = {};
 
 					for (var key in this._receivedMessages) {
 						var receivedMessage = this._receivedMessages[key];
-						localStorage.removeItem("Received:"+this._localKey+receivedMessage.messageIdentifier);
+						_localStorage.removeItem("Received:"+this._localKey+receivedMessage.messageIdentifier);
 					}
 					this._receivedMessages = {};
 				}
@@ -1254,7 +1458,7 @@ Paho.MQTT = (function (global) {
 				 // If this is a re flow of a PUBACK after we have restarted receivedMessage will not exist.
 				if (sentMessage) {
 					delete this._sentMessages[wireMessage.messageIdentifier];
-					localStorage.removeItem("Sent:"+this._localKey+wireMessage.messageIdentifier);
+					_localStorage.removeItem("Sent:"+this._localKey+wireMessage.messageIdentifier);
 					if (this.onMessageDelivered)
 						this.onMessageDelivered(sentMessage.payloadMessage);
 				}
@@ -1273,7 +1477,7 @@ Paho.MQTT = (function (global) {
 								
 			case MESSAGE_TYPE.PUBREL:
 				var receivedMessage = this._receivedMessages[wireMessage.messageIdentifier];
-				localStorage.removeItem("Received:"+this._localKey+wireMessage.messageIdentifier);
+				_localStorage.removeItem("Received:"+this._localKey+wireMessage.messageIdentifier);
 				// If this is a re flow of a PUBREL after we have restarted receivedMessage will not exist.
 				if (receivedMessage) {
 					this._receiveMessage(receivedMessage);
@@ -1287,7 +1491,7 @@ Paho.MQTT = (function (global) {
 			case MESSAGE_TYPE.PUBCOMP: 
 				var sentMessage = this._sentMessages[wireMessage.messageIdentifier];
 				delete this._sentMessages[wireMessage.messageIdentifier];
-				localStorage.removeItem("Sent:"+this._localKey+wireMessage.messageIdentifier);
+				_localStorage.removeItem("Sent:"+this._localKey+wireMessage.messageIdentifier);
 				if (this.onMessageDelivered)
 					this.onMessageDelivered(sentMessage.payloadMessage);
 				break;
@@ -2503,186 +2707,6 @@ EventEmitter
 Source: https://github.com/benjreinhart/node-event-emitter
  */
 (function(b){function a(b,d){if({}.hasOwnProperty.call(a.cache,b))return a.cache[b];var e=a.resolve(b);if(!e)throw new Error('Failed to resolve module '+b);var c={id:b,require:a,filename:b,exports:{},loaded:!1,parent:d,children:[]};d&&d.children.push(c);var f=b.slice(0,b.lastIndexOf('/')+1);return a.cache[b]=c.exports,e.call(c.exports,c,c.exports,f,b),c.loaded=!0,a.cache[b]=c.exports}a.modules={},a.cache={},a.resolve=function(b){return{}.hasOwnProperty.call(a.modules,b)?a.modules[b]:void 0},a.define=function(b,c){a.modules[b]=c},a.define('/index.js',function(c,d,e,f){function b(){b.init.call(this)}var a={};a.isObject=function a(b){return typeof b==='object'&&b!==null},a.isNumber=function a(b){return typeof b==='number'},a.isUndefined=function a(b){return b===void 0},a.isFunction=function a(b){return typeof b==='function'},c.exports=b,b.EventEmitter=b,b.prototype._events=undefined,b.prototype._maxListeners=undefined,b.defaultMaxListeners=10,b.init=function(){this._events=this._events||{},this._maxListeners=this._maxListeners||undefined},b.prototype.setMaxListeners=function(b){if(!a.isNumber(b)||b<0||isNaN(b))throw TypeError('n must be a positive number');return this._maxListeners=b,this},b.prototype.emit=function(h){var f,c,d,e,b,g;if(this._events||(this._events={}),h==='error'&&!this._events.error&&false)throw f=arguments[1],f instanceof Error?f:Error('Uncaught, unspecified "error" event.');if(c=this._events[h],a.isUndefined(c))return!1;if(a.isFunction(c))switch(arguments.length){case 1:c.call(this);break;case 2:c.call(this,arguments[1]);break;case 3:c.call(this,arguments[1],arguments[2]);break;default:d=arguments.length;e=new Array(d-1);for(b=1;b<d;b++)e[b-1]=arguments[b];c.apply(this,e)}else if(a.isObject(c)){for(d=arguments.length,e=new Array(d-1),b=1;b<d;b++)e[b-1]=arguments[b];for(g=c.slice(),d=g.length,b=0;b<d;b++)g[b].apply(this,e)}return!0},b.prototype.addListener=function(c,d){var e;if(!a.isFunction(d))throw TypeError('listener must be a function');if(this._events||(this._events={}),this._events.newListener&&this.emit('newListener',c,a.isFunction(d.listener)?d.listener:d),this._events[c]?a.isObject(this._events[c])?this._events[c].push(d):this._events[c]=[this._events[c],d]:this._events[c]=d,a.isObject(this._events[c])&&!this._events[c].warned){var e;a.isUndefined(this._maxListeners)?e=b.defaultMaxListeners:e=this._maxListeners,e&&e>0&&this._events[c].length>e&&(this._events[c].warned=!0,a.isFunction(console.error)&&console.error('(node) warning: possible EventEmitter memory leak detected. %d listeners added. Use emitter.setMaxListeners() to increase limit.',this._events[c].length),a.isFunction(console.trace)&&console.trace())}return this},b.prototype.on=b.prototype.addListener,b.prototype.once=function(e,b){function c(){this.removeListener(e,c),d||(d=!0,b.apply(this,arguments))}if(!a.isFunction(b))throw TypeError('listener must be a function');var d=!1;return c.listener=b,this.on(e,c),this},b.prototype.removeListener=function(d,c){var b,f,g,e;if(!a.isFunction(c))throw TypeError('listener must be a function');if(!(this._events&&this._events[d]))return this;if(b=this._events[d],g=b.length,f=-1,b===c||a.isFunction(b.listener)&&b.listener===c)delete this._events[d],this._events.removeListener&&this.emit('removeListener',d,c);else if(a.isObject(b)){for(e=g;e-->0;)if(b[e]===c||b[e].listener&&b[e].listener===c){f=e;break}if(f<0)return this;b.length===1?(b.length=0,delete this._events[d]):b.splice(f,1),this._events.removeListener&&this.emit('removeListener',d,c)}return this},b.prototype.removeAllListeners=function(c){var d,b;if(!this._events)return this;if(!this._events.removeListener)return arguments.length===0?this._events={}:this._events[c]&&delete this._events[c],this;if(arguments.length===0){for(d in this._events){if(d==='removeListener')continue;this.removeAllListeners(d)}return this.removeAllListeners('removeListener'),this._events={},this}if(b=this._events[c],a.isFunction(b))this.removeListener(c,b);else if(Array.isArray(b))while(b.length)this.removeListener(c,b[b.length-1]);return delete this._events[c],this},b.prototype.listeners=function(b){var c;return this._events&&this._events[b]?a.isFunction(this._events[b])?c=[this._events[b]]:c=this._events[b].slice():c=[],c},b.listenerCount=function(b,d){var c;return b._events&&b._events[d]?a.isFunction(b._events[d])?c=1:c=b._events[d].length:c=0,c}}),b.EventEmitter=a('/index.js')}.call(this,this))
-
-/*
-Store.js
-Copyright (c) 2010-2016 Marcus Westin
-Source: https://github.com/marcuswestin/store.js
-*/
-var storejs = (function() {
-	var store = {},
-		win = (typeof window != 'undefined' ? window : global),
-		doc = win.document,
-		localStorageName = 'localStorage',
-		scriptTag = 'script',
-		storage
-
-	store.disabled = false
-	store.version = '1.3.20'
-	store.set = function(key, value) {}
-	store.get = function(key, defaultVal) {}
-	store.has = function(key) { return store.get(key) !== undefined }
-	store.remove = function(key) {}
-	store.clear = function() {}
-	store.transact = function(key, defaultVal, transactionFn) {
-		if (transactionFn == null) {
-			transactionFn = defaultVal
-			defaultVal = null
-		}
-		if (defaultVal == null) {
-			defaultVal = {}
-		}
-		var val = store.get(key, defaultVal)
-		transactionFn(val)
-		store.set(key, val)
-	}
-	store.getAll = function() {}
-	store.forEach = function() {}
-
-	store.serialize = function(value) {
-		return JSON.stringify(value)
-	}
-	store.deserialize = function(value) {
-		if (typeof value != 'string') { return undefined }
-		try { return JSON.parse(value) }
-		catch(e) { return value || undefined }
-	}
-
-	// Functions to encapsulate questionable FireFox 3.6.13 behavior
-	// when about.config::dom.storage.enabled === false
-	// See https://github.com/marcuswestin/store.js/issues#issue/13
-	function isLocalStorageNameSupported() {
-		try { return (localStorageName in win && win[localStorageName]) }
-		catch(err) { return false }
-	}
-
-	if (isLocalStorageNameSupported()) {
-		storage = win[localStorageName]
-		store.set = function(key, val) {
-			if (val === undefined) { return store.remove(key) }
-			storage.setItem(key, store.serialize(val))
-			return val
-		}
-		store.get = function(key, defaultVal) {
-			var val = store.deserialize(storage.getItem(key))
-			return (val === undefined ? defaultVal : val)
-		}
-		store.remove = function(key) { storage.removeItem(key) }
-		store.clear = function() { storage.clear() }
-		store.getAll = function() {
-			var ret = {}
-			store.forEach(function(key, val) {
-				ret[key] = val
-			})
-			return ret
-		}
-		store.forEach = function(callback) {
-			for (var i=0; i<storage.length; i++) {
-				var key = storage.key(i)
-				callback(key, store.get(key))
-			}
-		}
-	} else if (doc && doc.documentElement.addBehavior) {
-		var storageOwner,
-			storageContainer
-		// Since #userData storage applies only to specific paths, we need to
-		// somehow link our data to a specific path.  We choose /favicon.ico
-		// as a pretty safe option, since all browsers already make a request to
-		// this URL anyway and being a 404 will not hurt us here.  We wrap an
-		// iframe pointing to the favicon in an ActiveXObject(htmlfile) object
-		// (see: http://msdn.microsoft.com/en-us/library/aa752574(v=VS.85).aspx)
-		// since the iframe access rules appear to allow direct access and
-		// manipulation of the document element, even for a 404 page.  This
-		// document can be used instead of the current document (which would
-		// have been limited to the current path) to perform #userData storage.
-		try {
-			storageContainer = new ActiveXObject('htmlfile')
-			storageContainer.open()
-			storageContainer.write('<'+scriptTag+'>document.w=window</'+scriptTag+'><iframe src="/favicon.ico"></iframe>')
-			storageContainer.close()
-			storageOwner = storageContainer.w.frames[0].document
-			storage = storageOwner.createElement('div')
-		} catch(e) {
-			// somehow ActiveXObject instantiation failed (perhaps some special
-			// security settings or otherwse), fall back to per-path storage
-			storage = doc.createElement('div')
-			storageOwner = doc.body
-		}
-		var withIEStorage = function(storeFunction) {
-			return function() {
-				var args = Array.prototype.slice.call(arguments, 0)
-				args.unshift(storage)
-				// See http://msdn.microsoft.com/en-us/library/ms531081(v=VS.85).aspx
-				// and http://msdn.microsoft.com/en-us/library/ms531424(v=VS.85).aspx
-				storageOwner.appendChild(storage)
-				storage.addBehavior('#default#userData')
-				storage.load(localStorageName)
-				var result = storeFunction.apply(store, args)
-				storageOwner.removeChild(storage)
-				return result
-			}
-		}
-
-		// In IE7, keys cannot start with a digit or contain certain chars.
-		// See https://github.com/marcuswestin/store.js/issues/40
-		// See https://github.com/marcuswestin/store.js/issues/83
-		var forbiddenCharsRegex = new RegExp("[!\"#$%&'()*+,/\\\\:;<=>?@[\\]^`{|}~]", "g")
-		var ieKeyFix = function(key) {
-			return key.replace(/^d/, '___$&').replace(forbiddenCharsRegex, '___')
-		}
-		store.set = withIEStorage(function(storage, key, val) {
-			key = ieKeyFix(key)
-			if (val === undefined) { return store.remove(key) }
-			storage.setAttribute(key, store.serialize(val))
-			storage.save(localStorageName)
-			return val
-		})
-		store.get = withIEStorage(function(storage, key, defaultVal) {
-			key = ieKeyFix(key)
-			var val = store.deserialize(storage.getAttribute(key))
-			return (val === undefined ? defaultVal : val)
-		})
-		store.remove = withIEStorage(function(storage, key) {
-			key = ieKeyFix(key)
-			storage.removeAttribute(key)
-			storage.save(localStorageName)
-		})
-		store.clear = withIEStorage(function(storage) {
-			var attributes = storage.XMLDocument.documentElement.attributes
-			storage.load(localStorageName)
-			for (var i=attributes.length-1; i>=0; i--) {
-				storage.removeAttribute(attributes[i].name)
-			}
-			storage.save(localStorageName)
-		})
-		store.getAll = function(storage) {
-			var ret = {}
-			store.forEach(function(key, val) {
-				ret[key] = val
-			})
-			return ret
-		}
-		store.forEach = withIEStorage(function(storage, callback) {
-			var attributes = storage.XMLDocument.documentElement.attributes
-			for (var i=0, attr; attr=attributes[i]; ++i) {
-				callback(attr.name, store.deserialize(storage.getAttribute(attr.name)))
-			}
-		})
-	}
-
-	try {
-		var testKey = '__storejs__'
-		store.set(testKey, testKey)
-		if (store.get(testKey) != testKey) { store.disabled = true }
-		store.remove(testKey)
-	} catch(e) {
-		store.disabled = true
-	}
-	store.enabled = !store.disabled
-	
-	return store
-}());
-
 
 /**
  *  Microgear JS library
