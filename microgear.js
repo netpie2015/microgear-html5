@@ -3319,6 +3319,10 @@ Microgear.create = function(param) {
 		}
 	}
 
+	_microgear.prototype.pushowner = function(msg) {
+		self.publish('/@push/owner', msg);
+	}
+
 	_microgear.prototype.setName = _microgear.prototype.setname;
 	_microgear.prototype.unsetName = _microgear.prototype.unsetname;
 	_microgear.prototype.setAlias = _microgear.prototype.setalias;
@@ -3328,6 +3332,7 @@ Microgear.create = function(param) {
 	_microgear.prototype.useTLS = _microgear.prototype.usetls;
 	_microgear.prototype.setConfig = _microgear.prototype.setconfig;
 	_microgear.prototype.getConfig = _microgear.prototype.getconfig;
+	_microgear.prototype.pushOwner = _microgear.prototype.pushowner;
 
 	if (gkey && gsecret) {
 		var mg = new _microgear(gkey,gsecret,galias);
