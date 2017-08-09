@@ -21,7 +21,7 @@
  * Microgear-HTML5 communicates over TLS by default
  * If you want to disable TLS, set USETLS to false
  */
-const VERSION = '1.1.7';
+const VERSION = '1.1.8';
 const GEARAPIADDRESS = 'ga.netpie.io';
 const GEARAPIPORT = '8080';
 const GEARAPISECUREPORT = '8081';
@@ -3260,8 +3260,13 @@ Microgear.create = function(param) {
 			    }		
 			};
 
+			var apiurl, gearauthurl;
 			var revokecode = atok.revokecode.replace(/\//g,'_');
-	        var apiurl = 'http://'+GEARAUTH+':'+GEARAPIPORT+'/api/revoke/'+atok.token+'/'+revokecode;
+
+			if (self.securemode) gearauthurl = 'https://'+GEARAUTH+':'+GEARAPISECUREPORT;
+			else gearauthurl = 'http://'+GEARAUTH+':'+GEARAPIPORT;
+
+	        apiurl = gearauthurl+'/api/revoke/'+atok.token+'/'+revokecode;
 			xmlHttp.open("GET", apiurl, true); //true for asynchronous 
 	    	xmlHttp.send(null);
 		}
