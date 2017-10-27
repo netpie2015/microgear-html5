@@ -21,28 +21,28 @@
  * Microgear-HTML5 communicates over TLS by default
  * If you want to disable TLS, set USETLS to false
  */
-const VERSION = '1.1.8';
-const GEARAPIADDRESS = 'ga.netpie.io';
-const GEARAPIPORT = '8080';
-const GEARAPISECUREPORT = '8081';
-const GBWSPORT = '8083';
-const GBWSSPORT = '8084';
-const USETLS = true;
+var VERSION = '$_VERSION';
+var GEARAPIADDRESS = 'ga.netpie.io';
+var GEARAPIPORT = '8080';
+var GEARAPISECUREPORT = '8081';
+var GBWSPORT = '8083';
+var GBWSSPORT = '8084';
+var USETLS = true;
 
 /**
  * Microgear API version
  */
-const MGREV = 'WJS1b';
+var MGREV = 'WJS1b';
 
 /**
  * Constants
  */
-const MINTOKDELAYTIME = 100;
-const MAXTOKDELAYTIME = 30000;
-const DEBUGMODE = false;
-const MONLOOPINTERVAL = 1000;
-const RETRYCONNECTIONINTERVAL = 5000;
-const MESSAGEBUFFERSIZE = 20;
+var MINTOKDELAYTIME = 100;
+var MAXTOKDELAYTIME = 30000;
+var DEBUGMODE = false;
+var MONLOOPINTERVAL = 1000;
+var RETRYCONNECTIONINTERVAL = 5000;
+var MESSAGEBUFFERSIZE = 20;
 
 /**
  * Variables
