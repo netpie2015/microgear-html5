@@ -264,10 +264,7 @@
         microgear.on('absent', function(event) {
           console.log(event);
         });
-        microgear.resettoken(function(){
-          microgear.connect(APPID);
-        });
-        
+        microgear.connect(APPID);        
       }
     </script>
   </head>
