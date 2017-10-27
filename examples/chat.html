@@ -253,7 +253,7 @@
 
         microgear.on('connected', function() {
           microgear.subscribe("/chat");
-          microgear.setname(name);
+          microgear.setAlias(name);
           microgear.publish("/chat","I'm new#"+name);
           microgear.publish("/chat","Hi#"+name);
           after_connect();
@@ -264,10 +264,7 @@
         microgear.on('absent', function(event) {
           console.log(event);
         });
-        microgear.resettoken(function(){
-          microgear.connect(APPID);
-        });
-        
+        microgear.connect(APPID);        
       }
     </script>
   </head>

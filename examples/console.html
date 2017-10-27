@@ -44,7 +44,7 @@
           console.log("connected");
           microgear.subscribe(document.getElementById("subscribe_to").value);
           if (document.getElementById("name").value != "") {
-            microgear.setname(document.getElementById("name").value);
+            microgear.setAlias(document.getElementById("name").value);
           }
 
           document.getElementById("to_select").disabled = "";
@@ -70,9 +70,7 @@
         }
 
         function connect() {
-          microgear.resettoken(function(err) {
-            microgear.connect(APPID);
-          });
+          microgear.connect(APPID);
         }
 
     </script>
