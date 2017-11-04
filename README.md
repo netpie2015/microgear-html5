@@ -14,12 +14,21 @@ Make sure ther following ports are allowed to connect from your network.
 - TLS mode : 8081 and 8084 (HTML5 microgear use this mode by default)
 - Non-TLS mode : 8080 and 8083
 
-## Installation
+## How to use
 
-Download microgear.js here
-https://raw.githubusercontent.com/netpieio/microgear-html5/master/microgear.js
+The raw js file can be used directly from the rawgit URL here
+https://raw.githubusercontent.com/netpieio/microgear-html5/master/src/index.js
 
-Or refer to the latest version directly from the cdn using this tag
+If possible, it is better to clone the git repository and build using the following steps
+
+```
+$ git clone https://github.com/netpieio/microgear-html5
+$ cd microgear-html5
+$ npm install
+$ npm run build
+```
+The library file will be located at build/microgear.js. However, you can find the ready-to-use version from the CDN. Just add the following HTML tag to your Javascript code:
+
 ```html
 <script src="https://cdn.netpie.io/microgear.js"></script>
 ```
