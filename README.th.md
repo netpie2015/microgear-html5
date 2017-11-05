@@ -15,12 +15,20 @@ microgear-html5 คือ client library ที่ทำหน้าที่เ
 - TLS mode : 8081 and 8084 (โดยปกติ HTML5 microgear จะใช้โหมดนี้เป็น default)
 - Non-TLS mode : 8080 and 8083
 
-## การติดตั้ง
+## การใช้งาน
 
-ดาวน์โหลด microgear.js จาก ที่นี่
-https://raw.githubusercontent.com/netpieio/microgear-html5/master/microgear.js
+เราสามารถเรียกใช้ไฟล์ js แบบดิบๆ ผ่านทาง rawgit URL ได้ที่นี่
+https://raw.githubusercontent.com/netpieio/microgear-html5/master/src/index.js
 
-หรือเรียกใช้เวอร์ชั่นล่าสุดจาก cdn โดยใช้ tag
+แต่เพื่อประสิทธิภาพการทำงานที่ดี แนะนำให้ clone git repository นี้และทำการ build ตามขั้นตอนนี้
+
+```
+$ git clone https://github.com/netpieio/microgear-html5
+$ cd microgear-html5
+$ npm install
+$ npm run build
+```
+ไฟล์ library ที่ได้จากการ build จะอยู่ที่ build/microgear.js หากไม่ต้องการ build เองก็สามารถเรียกใช้เวอร์ชั่นที่ build แล้วบน CDN ด้วยการใส่ HTML tag นี้ในโค้ด Javascript:
 ```html
 <script src="https://cdn.netpie.io/microgear.js"></script>
 ```
